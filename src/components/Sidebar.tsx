@@ -16,9 +16,17 @@ interface Conversation {
   snippets: string[];
 }
 
+// Model configuration type
+type AIModelType = 'coach' | 'cryBuddy' | 'mindReader';
+
 const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   const navigate = useNavigate();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedModel, setSelectedModel] = useState<AIModelType>(() => {
+    // Try to get the saved model from localStorage, default to 'coach'
+    const savedModel = localStorage.getItem('mitra-selected-model');
+    return (savedModel as AIModelType) || 'coach';
+  });
   
   // Load conversation history from localStorage on component mount
   useEffect(() => {
@@ -37,6 +45,11 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
       }
     }
   }, []);
+  
+  // Save the selected model to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('mitra-selected-model', selectedModel);
+  }, [selectedModel]);
   
   // The content for each menu item
   const homeContent = (
@@ -83,24 +96,29 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   
   const settingsContent = (
     <div className="p-6 bg-white rounded-lg shadow">
-      <h3 className="text-lg font-medium mb-3">Voice Settings</h3>
+      <h3 className="text-lg font-medium mb-3">AI Model Selection</h3>
+      <p className="text-gray-600 mb-4">Choose the AI personality that best suits your needs:</p>
+      
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Voice Speed</label>
-          <input type="range" className="w-full" min="0.5" max="2" step="0.1" defaultValue="1" />
+        <div className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedModel === 'coach' ? 'border-mitra-deep-pink bg-pink-50' : 'border-gray-200 hover:border-mitra-light-blue'}`}
+          onClick={() => setSelectedModel('coach')}>
+          <h4 className="font-medium">The Coach</h4>
+          <p className="text-sm text-gray-600">Gives you concrete, actionable stress-busting tools like breathing exercises and mindfulness practices.</p>
+          <p className="text-xs text-gray-500 mt-1">Use when you're ready for practical advice to calm down.</p>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Voice Pitch</label>
-          <input type="range" className="w-full" min="0.5" max="2" step="0.1" defaultValue="1" />
+        
+        <div className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedModel === 'cryBuddy' ? 'border-mitra-deep-pink bg-pink-50' : 'border-gray-200 hover:border-mitra-light-blue'}`}
+          onClick={() => setSelectedModel('cryBuddy')}>
+          <h4 className="font-medium">The Cry-Buddy</h4>
+          <p className="text-sm text-gray-600">Listens and empathizes—just lets you vent and "cries" with you.</p>
+          <p className="text-xs text-gray-500 mt-1">Use when you need to get it all out and feel heard.</p>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
-          <select className="w-full p-2 border rounded">
-            <option>English</option>
-            <option>Spanish</option>
-            <option>French</option>
-            <option>German</option>
-          </select>
+        
+        <div className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedModel === 'mindReader' ? 'border-mitra-deep-pink bg-pink-50' : 'border-gray-200 hover:border-mitra-light-blue'}`}
+          onClick={() => setSelectedModel('mindReader')}>
+          <h4 className="font-medium">The Mind-Reader</h4>
+          <p className="text-sm text-gray-600">Picks up on how you're feeling (tone, words) and mirrors it back so you really see your stress.</p>
+          <p className="text-xs text-gray-500 mt-1">Use when you want clarity on what's going on inside your head.</p>
         </div>
       </div>
     </div>
@@ -160,7 +178,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                 onClick={() => handleTabClick("home")}
               >
                 <Home size={20} />
-                <span>Home</span>
+                <span className="ml-2">Home</span>
               </Button>
             </li>
             <li>
@@ -170,7 +188,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                 onClick={() => handleTabClick("history")}
               >
                 <Clock size={20} />
-                <span>Session History</span>
+                <span className="ml-2">Session History</span>
               </Button>
             </li>
             <li>
@@ -180,7 +198,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                 onClick={() => handleTabClick("feedback")}
               >
                 <MessageSquare size={20} />
-                <span>Feedback</span>
+                <span className="ml-2">Feedback</span>
               </Button>
             </li>
           </ul>
@@ -193,7 +211,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
             onClick={() => handleTabClick("settings")}
           >
             <Settings size={20} />
-            <span>Settings</span>
+            <span className="ml-2">Settings</span>
           </Button>
         </div>
 
