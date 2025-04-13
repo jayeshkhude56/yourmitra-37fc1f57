@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import SpeechProcessor from '@/services/SpeechProcessor';
+import VoiceGenderSelector from '@/components/VoiceGenderSelector';
 
 interface MainContentProps {
   isSessionActive: boolean;
@@ -16,6 +18,11 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   const [responseText, setResponseText] = useState("");
   const [isMitraSpeaking, setIsMitraSpeaking] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [selectedGender, setSelectedGender] = useState<'male' | 'female'>(() => {
+    // Try to get saved gender from localStorage
+    const savedGender = localStorage.getItem('mitra-voice-gender');
+    return (savedGender === 'female' ? 'female' : 'male');
+  });
 
   useEffect(() => {
     console.log("Session active state changed:", isSessionActive);
@@ -34,6 +41,12 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       setVoiceError(null);
     }
   }, [isSessionActive]);
+  
+  const handleGenderChange = (gender: 'male' | 'female') => {
+    setSelectedGender(gender);
+    SpeechProcessor.setVoiceGender(gender);
+    console.log(`Voice gender set to: ${gender}`);
+  };
   
   const handleStartListening = () => {
     console.log("Starting to listen for user speech");
@@ -71,7 +84,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             
             setResponseText(response);
             
-            console.log("Speaking AI response");
+            console.log(`Speaking AI response using ${selectedGender} voice`);
             setIsMitraSpeaking(true);
             SpeechProcessor.speak(response, () => {
               console.log("AI finished speaking");
@@ -114,6 +127,12 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto p-6">
       <div className="flex flex-col items-center w-full">
+        {/* Voice Gender Selector */}
+        <VoiceGenderSelector 
+          selectedGender={selectedGender}
+          onGenderChange={handleGenderChange}
+        />
+
         <div 
           onClick={userSpeaking ? handleStopListening : handleStartListening}
           className={`w-40 h-40 rounded-full flex items-center justify-center mb-6 cursor-pointer
@@ -171,7 +190,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           
           {responseText && !interimText && (
             <div className="mt-4">
-              <h3 className="text-sm text-gray-400 mb-1">Mitra:</h3>
+              <h3 className="text-sm text-gray-400 mb-1">Assistant:</h3>
               <p className={`text-lg ${isMitraSpeaking ? 'text-mitra-sky-blue' : ''}`}>{responseText}</p>
             </div>
           )}
@@ -184,7 +203,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
               className="bg-mitra-sky-blue hover:bg-blue-500 text-white px-6 py-4 h-auto rounded-full"
               disabled={isMitraSpeaking}
             >
-              Speak to Mitra
+              Speak to Assistant
             </Button>
           ) : (
             <Button 

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 
 export class SpeechProcessor {
@@ -6,6 +5,7 @@ export class SpeechProcessor {
   private speechSynthesis: SpeechSynthesis;
   private isListening: boolean = false;
   private currentAIModel: string = 'coach'; // Default AI model
+  private voiceGender: 'male' | 'female' = 'male'; // Default voice gender
   
   constructor() {
     // Check if browser supports Web Speech API
@@ -30,6 +30,15 @@ export class SpeechProcessor {
       console.log(`Loaded AI model from localStorage: ${savedModel}`);
     } else {
       console.log(`Using default AI model: ${this.currentAIModel}`);
+    }
+    
+    // Get the saved voice gender from localStorage if available
+    const savedGender = localStorage.getItem('mitra-voice-gender');
+    if (savedGender && (savedGender === 'male' || savedGender === 'female')) {
+      this.voiceGender = savedGender;
+      console.log(`Loaded voice gender from localStorage: ${savedGender}`);
+    } else {
+      console.log(`Using default voice gender: ${this.voiceGender}`);
     }
   }
   
@@ -92,6 +101,18 @@ export class SpeechProcessor {
     return this.currentAIModel;
   }
   
+  // Set the voice gender
+  public setVoiceGender(gender: 'male' | 'female'): void {
+    this.voiceGender = gender;
+    localStorage.setItem('mitra-voice-gender', gender);
+    console.log(`Voice gender set to: ${gender}`);
+  }
+  
+  // Get the current voice gender
+  public getVoiceGender(): string {
+    return this.voiceGender;
+  }
+  
   // Add natural pauses to speech for more human-like delivery
   private addSpeechPauses(text: string): string {
     // Add commas for slight pauses
@@ -113,7 +134,7 @@ export class SpeechProcessor {
       return;
     }
     
-    console.log(`Speaking with ${this.currentAIModel} personality: "${text}"`);
+    console.log(`Speaking with ${this.currentAIModel} personality using ${this.voiceGender} voice: "${text}"`);
     
     // Stop any current speech
     this.speechSynthesis.cancel();
@@ -127,56 +148,73 @@ export class SpeechProcessor {
       console.log(`Updated AI model from localStorage: ${savedModel}`);
     }
     
-    // Select a voice based on the AI model
+    // Check current voice gender from localStorage again in case it changed
+    const savedGender = localStorage.getItem('mitra-voice-gender');
+    if (savedGender && (savedGender === 'male' || savedGender === 'female')) {
+      this.voiceGender = savedGender as 'male' | 'female';
+      console.log(`Updated voice gender from localStorage: ${savedGender}`);
+    }
+    
+    // Select a voice based on the AI model and gender
     const voices = this.speechSynthesis.getVoices();
     let preferredVoice = null;
     
+    // Log available voices for debugging
+    console.log(`Available voices: ${voices.length}`);
+    voices.forEach((voice, index) => {
+      console.log(`Voice ${index}: ${voice.name} (${voice.lang})`);
+    });
+    
+    // First priority: find a voice matching both model and gender
+    if (this.voiceGender === 'female') {
+      console.log('Looking for female voice...');
+      preferredVoice = voices.find(voice => 
+        voice.name.includes('Female') || 
+        voice.name.includes('Samantha') || 
+        voice.name.includes('Victoria') ||
+        voice.name.includes('Karen')
+      );
+    } else {
+      console.log('Looking for male voice...');
+      preferredVoice = voices.find(voice => 
+        voice.name.includes('Male') || 
+        voice.name.includes('Daniel') || 
+        voice.name.includes('Google UK English Male') ||
+        voice.name.includes('David')
+      );
+    }
+    
+    // Apply personality-specific settings
     switch(this.currentAIModel) {
       case 'coach':
-        // Find a male authoritative but friendly voice
-        preferredVoice = voices.find(voice => 
-          voice.name.includes('Male') || voice.name.includes('Google UK English Male')
-        );
-        utterance.rate = 0.95; // Slightly slower for coaching clarity
-        utterance.pitch = 1.0;
-        console.log('Using coach voice profile - authoritative but friendly');
+        utterance.rate = this.voiceGender === 'female' ? 0.97 : 0.95;
+        utterance.pitch = this.voiceGender === 'female' ? 1.05 : 1.0;
+        console.log(`Using coach voice profile with ${this.voiceGender} voice - authoritative but friendly`);
         break;
         
       case 'cryBuddy':
-        // Find a softer, more empathetic voice
-        preferredVoice = voices.find(voice => 
-          voice.name.includes('Female') || voice.name.includes('Samantha')
-        );
-        utterance.rate = 0.85; // Slower for empathy
-        utterance.pitch = 1.1; // Slightly higher for warmth
-        console.log('Using cry-buddy voice profile - soft and empathetic');
+        utterance.rate = this.voiceGender === 'female' ? 0.83 : 0.85;
+        utterance.pitch = this.voiceGender === 'female' ? 1.2 : 1.1;
+        console.log(`Using cry-buddy voice profile with ${this.voiceGender} voice - soft and empathetic`);
         break;
         
       case 'mindReader':
-        // Find a neutral, analytical voice
-        preferredVoice = voices.find(voice => 
-          voice.name.includes('Google US English') || voice.name.includes('Daniel')
-        );
-        utterance.rate = 0.9;
-        utterance.pitch = 0.95; // Slightly deeper for thoughtfulness
-        console.log('Using mind-reader voice profile - neutral and analytical');
+        utterance.rate = this.voiceGender === 'female' ? 0.88 : 0.9;
+        utterance.pitch = this.voiceGender === 'female' ? 1.0 : 0.95;
+        console.log(`Using mind-reader voice profile with ${this.voiceGender} voice - neutral and analytical`);
         break;
         
       default:
-        // Default voice
-        preferredVoice = voices.find(voice => 
-          voice.name.includes('Google US English') || voice.name.includes('Daniel')
-        );
         utterance.rate = 0.9;
-        utterance.pitch = 1.0;
-        console.log('Using default voice profile');
+        utterance.pitch = this.voiceGender === 'female' ? 1.05 : 1.0;
+        console.log(`Using default voice profile with ${this.voiceGender} voice`);
     }
     
     if (preferredVoice) {
       utterance.voice = preferredVoice;
-      console.log(`Selected voice: ${preferredVoice.name}`);
+      console.log(`Selected ${this.voiceGender} voice: ${preferredVoice.name}`);
     } else {
-      console.warn('No matching voice found, using default browser voice');
+      console.warn(`No matching ${this.voiceGender} voice found, using default browser voice`);
     }
     
     // Adjust parameters based on text content for more natural delivery

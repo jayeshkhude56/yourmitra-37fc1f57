@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -50,6 +49,7 @@
     --mitra-light-blue: #D3E4FD;
     --mitra-sky-blue: #33C3F0;
     --mitra-text: #3F3F46;
+    --mitra-pink: #FF6B8B;
   }
 
   .dark {
@@ -179,6 +179,18 @@
 
 .text-mitra-sky-blue {
   color: var(--mitra-sky-blue);
+}
+
+.bg-mitra-sky-blue {
+  background-color: var(--mitra-sky-blue);
+}
+
+.text-mitra-pink {
+  color: var(--mitra-pink);
+}
+
+.bg-mitra-pink {
+  background-color: var(--mitra-pink);
 }
 
 /* Custom media queries */
