@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Home, Clock, MessageSquare, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import VoiceGenderSelector from './VoiceGenderSelector';
+import SpeechProcessor from '@/services/SpeechProcessor';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -27,6 +29,17 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
     const savedModel = localStorage.getItem('mitra-selected-model');
     return (savedModel as AIModelType) || 'coach';
   });
+  
+  const [voiceGender, setVoiceGender] = useState<'male' | 'female'>(() => {
+    // Try to get the saved voice gender from localStorage, default to 'male'
+    const savedGender = localStorage.getItem('mitra-voice-gender');
+    return (savedGender as 'male' | 'female') || 'male';
+  });
+  
+  const handleVoiceGenderChange = (gender: 'male' | 'female') => {
+    setVoiceGender(gender);
+    localStorage.setItem('mitra-voice-gender', gender);
+  };
   
   // Load conversation history from localStorage on component mount
   useEffect(() => {
@@ -166,6 +179,14 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
             >
               <ChevronLeft size={20} />
             </Button>
+          </div>
+          
+          {/* Voice Gender Selector */}
+          <div className="mt-4 flex justify-center">
+            <VoiceGenderSelector 
+              selectedGender={voiceGender} 
+              onGenderChange={handleVoiceGenderChange}
+            />
           </div>
         </div>
 

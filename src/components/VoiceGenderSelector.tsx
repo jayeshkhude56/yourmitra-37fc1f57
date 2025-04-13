@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Switch } from "@/components/ui/switch";
+import { User, UserRound } from 'lucide-react';
 import SpeechProcessor from '@/services/SpeechProcessor';
 
 interface VoiceGenderSelectorProps {
@@ -19,10 +20,10 @@ const VoiceGenderSelector = ({ selectedGender, onGenderChange }: VoiceGenderSele
   };
 
   return (
-    <div className="flex items-center justify-center space-x-2 mb-4">
-      <span className={selectedGender === 'male' ? 'text-blue-500 font-medium' : 'text-gray-400'}>
-        Male
-      </span>
+    <div className="flex items-center justify-center space-x-2">
+      <div className={selectedGender === 'male' ? 'text-blue-500' : 'text-gray-400'}>
+        <User size={20} />
+      </div>
       
       <Switch 
         checked={selectedGender === 'female'}
@@ -34,9 +35,9 @@ const VoiceGenderSelector = ({ selectedGender, onGenderChange }: VoiceGenderSele
         }`}
       />
       
-      <span className={selectedGender === 'female' ? 'text-pink-400 font-medium' : 'text-gray-400'}>
-        Female
-      </span>
+      <div className={selectedGender === 'female' ? 'text-pink-400' : 'text-gray-400'}>
+        <UserRound size={20} />
+      </div>
     </div>
   );
 };
