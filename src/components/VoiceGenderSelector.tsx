@@ -18,7 +18,7 @@ const VoiceGenderSelector = ({
     SpeechProcessor.setVoiceGender(newGender);
     console.log(`Voice gender changed to: ${newGender}`);
   };
-  return <div className="flex items-center justify-center space-x-2 my-px mx-0 px-0 py-0 rounded-none">
+  return <div className="flex items-center justify-center space-x-2 py-0 rounded-none px-[5px] mx-[3px] my-0">
       <div className={selectedGender === 'male' ? 'text-blue-500' : 'text-gray-400'}>
         <User size={20} />
       </div>
