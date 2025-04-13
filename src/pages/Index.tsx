@@ -3,11 +3,10 @@ import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import MainContent from '@/components/MainContent';
-import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isSessionActive, setIsSessionActive] = useState(false);
+  const [isSessionActive, setIsSessionActive] = useState(true); // Set to true by default
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
