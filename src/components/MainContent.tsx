@@ -88,9 +88,9 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           onClick={userSpeaking ? handleStopListening : handleStartListening}
           className={`w-40 h-40 rounded-full flex items-center justify-center mb-6 cursor-pointer
             ${(userSpeaking || isMitraSpeaking) ? 'animate-pulse' : 'breathing-circle'} 
-            ${userSpeaking ? 'bg-blue-400' : 'bg-blue-400 bg-opacity-70'}`}
+            ${userSpeaking ? 'bg-mitra-sky-blue' : 'bg-mitra-sky-blue bg-opacity-70'}`}
         >
-          {/* Empty breathing circle */}
+          {/* Empty breathing circle with no text */}
         </div>
 
         {/* Voice line visualization */}
@@ -152,7 +152,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           {!userSpeaking ? (
             <Button 
               onClick={handleStartListening}
-              className="bg-mitra-light-blue hover:bg-blue-500 text-white px-6 py-4 h-auto rounded-full"
+              className="bg-mitra-sky-blue hover:bg-blue-500 text-white px-6 py-4 h-auto rounded-full"
               disabled={isMitraSpeaking}
             >
               Speak to Mitra
@@ -161,7 +161,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             <Button 
               onClick={handleStopListening}
               variant="outline"
-              className="border-mitra-light-blue text-mitra-light-blue hover:bg-blue-50 px-6 py-4 h-auto rounded-full"
+              className="border-mitra-sky-blue text-mitra-sky-blue hover:bg-blue-50 px-6 py-4 h-auto rounded-full"
             >
               Stop Speaking
             </Button>
@@ -170,7 +170,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           <Button 
             onClick={endSession}
             variant="outline"
-            className="border-gray-300 hover:bg-gray-50 px-6 py-4 h-auto rounded-full"
+            className="border-gray-400 text-gray-500 hover:bg-gray-50 px-6 py-4 h-auto rounded-full"
           >
             End Session
           </Button>

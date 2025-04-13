@@ -99,7 +99,7 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex bg-pink-50">
+    <div className="min-h-screen flex bg-gradient-to-br from-blue-50 to-pink-50">
       {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       

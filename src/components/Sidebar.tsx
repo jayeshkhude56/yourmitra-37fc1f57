@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Home, Clock, MessageSquare, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, Clock, MessageSquare, Settings, ChevronLeft, ChevronRight, Globe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
@@ -90,6 +90,37 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
       </div>
       <Button className="bg-mitra-deep-pink hover:bg-pink-600">
         Submit Feedback
+      </Button>
+    </div>
+  );
+
+  const domainContent = (
+    <div className="p-6 bg-white rounded-lg shadow">
+      <h3 className="text-lg font-medium mb-3">Custom Domain</h3>
+      <p className="text-gray-600 mb-4">Connect your own domain to Mitra for a personalized experience.</p>
+      
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Domain Name</label>
+        <input 
+          type="text" 
+          className="w-full p-2 border rounded" 
+          placeholder="yourdomain.com"
+        />
+      </div>
+      
+      <div className="mb-4">
+        <p className="text-sm text-gray-500">
+          To connect your domain, add these DNS records:
+        </p>
+        <div className="bg-gray-50 p-3 rounded mt-2 text-sm font-mono">
+          <p>Type: CNAME</p>
+          <p>Name: @</p>
+          <p>Value: mitra-app.vercel.app</p>
+        </div>
+      </div>
+      
+      <Button className="bg-mitra-deep-pink hover:bg-pink-600 w-full">
+        Verify Domain
       </Button>
     </div>
   );
@@ -201,6 +232,16 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                 <span className="ml-2">Feedback</span>
               </Button>
             </li>
+            <li>
+              <Button 
+                variant={activeTab === "domain" ? "default" : "ghost"} 
+                className={`w-full justify-start gap-3 hover:bg-pink-200 ${activeTab === "domain" ? "bg-pink-300" : ""}`}
+                onClick={() => handleTabClick("domain")}
+              >
+                <Globe size={20} />
+                <span className="ml-2">Domain</span>
+              </Button>
+            </li>
           </ul>
         </nav>
         
@@ -221,6 +262,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
               {activeTab === "home" && homeContent}
               {activeTab === "history" && historyContent}
               {activeTab === "feedback" && feedbackContent}
+              {activeTab === "domain" && domainContent}
               {activeTab === "settings" && settingsContent}
             </div>
           </div>
