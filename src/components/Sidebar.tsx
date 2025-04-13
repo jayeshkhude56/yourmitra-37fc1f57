@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Home, Clock, MessageSquare, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import VoiceGenderSelector from './VoiceGenderSelector';
 import SpeechProcessor from '@/services/SpeechProcessor';
-import { useToast } from "@/hooks/use-toast";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -31,7 +29,6 @@ const Sidebar = ({
   onGenderChange 
 }: SidebarProps) => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedModel, setSelectedModel] = useState<AIModelType>(() => {
     // Try to get the saved model from localStorage, default to 'coach'
@@ -48,12 +45,6 @@ const Sidebar = ({
   const handleVoiceGenderChange = (gender: 'male' | 'female') => {
     if (onGenderChange) {
       onGenderChange(gender);
-      // Show toast notification
-      toast({
-        title: "Voice Changed",
-        description: `Voice gender set to ${gender}`,
-        duration: 2000,
-      });
     }
   };
   
@@ -230,27 +221,28 @@ const Sidebar = ({
                 <span className="ml-2">Feedback</span>
               </Button>
             </li>
-            <li>
-              <Button 
-                variant={activeTab === "settings" ? "default" : "ghost"} 
-                className={`w-full justify-start gap-3 hover:bg-blue-200 ${activeTab === "settings" ? "bg-blue-300" : ""}`}
-                onClick={() => handleTabClick("settings")}
-              >
-                <Settings size={20} />
-                <span className="ml-2">Settings</span>
-              </Button>
-            </li>
-            <li>
-              <div className="w-full flex items-center pl-2 py-2">
-                <VoiceGenderSelector 
-                  selectedGender={selectedGender || 'male'} 
-                  onGenderChange={handleVoiceGenderChange}
-                />
-              </div>
-            </li>
           </ul>
         </nav>
         
+        <div className="mt-auto p-4 space-y-3">
+          {/* Voice Gender Selector - positioned before settings */}
+          <div className="flex justify-center">
+            <VoiceGenderSelector 
+              selectedGender={selectedGender || 'male'} 
+              onGenderChange={handleVoiceGenderChange}
+            />
+          </div>
+        
+          <Button 
+            variant={activeTab === "settings" ? "default" : "ghost"} 
+            className={`w-full justify-start gap-3 hover:bg-blue-200 ${activeTab === "settings" ? "bg-blue-300" : ""}`}
+            onClick={() => handleTabClick("settings")}
+          >
+            <Settings size={20} />
+            <span className="ml-2">Settings</span>
+          </Button>
+        </div>
+
         {activeTab && (
           <div className="px-4 pb-4">
             <div className="bg-white rounded-lg p-3 shadow">
