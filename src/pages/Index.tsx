@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -17,11 +16,21 @@ interface Conversation {
 
 const Index = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isSessionActive, setIsSessionActive] = useState(true); // Set to true by default
+  const [isSessionActive, setIsSessionActive] = useState(true);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
+  const [selectedGender, setSelectedGender] = useState<'male' | 'female'>(() => {
+    const savedGender = localStorage.getItem('mitra-voice-gender');
+    return (savedGender === 'female' ? 'female' : 'male');
+  });
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const handleGenderChange = (gender: 'male' | 'female') => {
+    setSelectedGender(gender);
+    SpeechProcessor.setVoiceGender(gender);
+    localStorage.setItem('mitra-voice-gender', gender);
   };
 
   const startSession = () => {
@@ -118,7 +127,12 @@ const Index = () => {
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-blue-50 to-white">
       {/* Sidebar */}
-      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        toggleSidebar={toggleSidebar} 
+        selectedGender={selectedGender}
+        onGenderChange={handleGenderChange}
+      />
       
       {/* Main content */}
       <div className="flex-1 flex flex-col">
