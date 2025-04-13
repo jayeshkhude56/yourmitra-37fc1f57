@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Home, Clock, MessageSquare, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -9,6 +8,8 @@ import SpeechProcessor from '@/services/SpeechProcessor';
 interface SidebarProps {
   isOpen: boolean;
   toggleSidebar: () => void;
+  selectedGender?: 'male' | 'female';
+  onGenderChange?: (gender: 'male' | 'female') => void;
 }
 
 interface Conversation {
@@ -21,7 +22,12 @@ interface Conversation {
 // Model configuration type
 type AIModelType = 'coach' | 'cryBuddy' | 'mindReader';
 
-const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
+const Sidebar = ({ 
+  isOpen, 
+  toggleSidebar, 
+  selectedGender, 
+  onGenderChange 
+}: SidebarProps) => {
   const navigate = useNavigate();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedModel, setSelectedModel] = useState<AIModelType>(() => {
@@ -37,8 +43,9 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   });
   
   const handleVoiceGenderChange = (gender: 'male' | 'female') => {
-    setVoiceGender(gender);
-    localStorage.setItem('mitra-voice-gender', gender);
+    if (onGenderChange) {
+      onGenderChange(gender);
+    }
   };
   
   // Load conversation history from localStorage on component mount
@@ -217,11 +224,11 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
           </ul>
         </nav>
         
-        <div className="mt-auto p-4">
-          {/* Voice Gender Selector - moved here before settings */}
-          <div className="mb-3 flex justify-center">
+        <div className="mt-auto p-4 space-y-3">
+          {/* Voice Gender Selector - positioned before settings */}
+          <div className="flex justify-center">
             <VoiceGenderSelector 
-              selectedGender={voiceGender} 
+              selectedGender={selectedGender || 'male'} 
               onGenderChange={handleVoiceGenderChange}
             />
           </div>
