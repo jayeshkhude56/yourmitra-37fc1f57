@@ -46,11 +46,9 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Custom Mitra Colors */
-    --mitra-pink: #FFDEE2;
-    --mitra-deep-pink: #D946EF;
+    /* Custom Mitra Colors - Updated to remove pink */
     --mitra-light-blue: #D3E4FD;
-    --mitra-sky-blue: #60A5FA;
+    --mitra-sky-blue: #33C3F0;
     --mitra-text: #3F3F46;
   }
 
@@ -154,37 +152,33 @@
   }
 }
 
-/* Pink theme for Mitra */
+/* Blue theme for Mitra */
 .bg-mitra-theme {
-  background-color: #FFDEE2;
+  background-color: #D3E4FD;
 }
 
 .text-mitra-theme {
-  color: #D946EF;
+  color: #33C3F0;
 }
 
 .border-mitra-theme {
-  border-color: #FFDEE2;
-}
-
-.bg-mitra-pink {
-  background-color: var(--mitra-pink);
+  border-color: #D3E4FD;
 }
 
 .bg-mitra-light-blue {
   background-color: var(--mitra-light-blue);
 }
 
-.text-mitra-deep-pink {
-  color: var(--mitra-deep-pink);
+.text-mitra-light-blue {
+  color: var(--mitra-light-blue);
 }
 
 .border-mitra-light-blue {
   border-color: var(--mitra-light-blue);
 }
 
-.text-mitra-light-blue {
-  color: var(--mitra-light-blue);
+.text-mitra-sky-blue {
+  color: var(--mitra-sky-blue);
 }
 
 /* Custom media queries */

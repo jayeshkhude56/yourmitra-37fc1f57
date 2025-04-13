@@ -80,6 +80,19 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
     setUserSpeaking(false);
     SpeechProcessor.stopListening();
   };
+  
+  const handleEndSession = () => {
+    // Make sure we're stopping any ongoing speech or listening
+    SpeechProcessor.stopListening();
+    if (isMitraSpeaking) {
+      window.speechSynthesis?.cancel();
+    }
+    setIsMitraSpeaking(false);
+    setUserSpeaking(false);
+    
+    // Now call the parent's endSession function
+    endSession();
+  };
 
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto p-6">
@@ -101,7 +114,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
                 {Array.from({ length: 12 }).map((_, i) => (
                   <div 
                     key={i}
-                    className="bg-mitra-deep-pink w-1 rounded-full"
+                    className="bg-mitra-sky-blue w-1 rounded-full"
                     style={{
                       height: `${Math.random() * 24 + (userSpeaking || isMitraSpeaking ? 8 : 4)}px`,
                       animationDelay: `${i * 0.05}s`,
@@ -143,7 +156,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           {responseText && !interimText && (
             <div className="mt-4">
               <h3 className="text-sm text-gray-400 mb-1">Mitra:</h3>
-              <p className={`text-lg ${isMitraSpeaking ? 'text-mitra-deep-pink' : ''}`}>{responseText}</p>
+              <p className={`text-lg ${isMitraSpeaking ? 'text-mitra-sky-blue' : ''}`}>{responseText}</p>
             </div>
           )}
         </div>
@@ -168,7 +181,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           )}
           
           <Button 
-            onClick={endSession}
+            onClick={handleEndSession}
             variant="outline"
             className="border-gray-400 text-gray-500 hover:bg-gray-50 px-6 py-4 h-auto rounded-full"
           >

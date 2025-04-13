@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Home, Clock, MessageSquare, Settings, ChevronLeft, ChevronRight, Globe } from 'lucide-react';
+import { Home, Clock, MessageSquare, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
@@ -88,39 +88,8 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
         <label className="block text-sm font-medium text-gray-700 mb-1">Your experience</label>
         <textarea className="w-full p-2 border rounded" rows={3} placeholder="Tell us how we can improve..."></textarea>
       </div>
-      <Button className="bg-mitra-deep-pink hover:bg-pink-600">
+      <Button className="bg-mitra-sky-blue hover:bg-blue-600">
         Submit Feedback
-      </Button>
-    </div>
-  );
-
-  const domainContent = (
-    <div className="p-6 bg-white rounded-lg shadow">
-      <h3 className="text-lg font-medium mb-3">Custom Domain</h3>
-      <p className="text-gray-600 mb-4">Connect your own domain to Mitra for a personalized experience.</p>
-      
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Domain Name</label>
-        <input 
-          type="text" 
-          className="w-full p-2 border rounded" 
-          placeholder="yourdomain.com"
-        />
-      </div>
-      
-      <div className="mb-4">
-        <p className="text-sm text-gray-500">
-          To connect your domain, add these DNS records:
-        </p>
-        <div className="bg-gray-50 p-3 rounded mt-2 text-sm font-mono">
-          <p>Type: CNAME</p>
-          <p>Name: @</p>
-          <p>Value: mitra-app.vercel.app</p>
-        </div>
-      </div>
-      
-      <Button className="bg-mitra-deep-pink hover:bg-pink-600 w-full">
-        Verify Domain
       </Button>
     </div>
   );
@@ -131,21 +100,21 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
       <p className="text-gray-600 mb-4">Choose the AI personality that best suits your needs:</p>
       
       <div className="space-y-4">
-        <div className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedModel === 'coach' ? 'border-mitra-deep-pink bg-pink-50' : 'border-gray-200 hover:border-mitra-light-blue'}`}
+        <div className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedModel === 'coach' ? 'border-mitra-sky-blue bg-blue-50' : 'border-gray-200 hover:border-mitra-light-blue'}`}
           onClick={() => setSelectedModel('coach')}>
           <h4 className="font-medium">The Coach</h4>
           <p className="text-sm text-gray-600">Gives you concrete, actionable stress-busting tools like breathing exercises and mindfulness practices.</p>
           <p className="text-xs text-gray-500 mt-1">Use when you're ready for practical advice to calm down.</p>
         </div>
         
-        <div className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedModel === 'cryBuddy' ? 'border-mitra-deep-pink bg-pink-50' : 'border-gray-200 hover:border-mitra-light-blue'}`}
+        <div className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedModel === 'cryBuddy' ? 'border-mitra-sky-blue bg-blue-50' : 'border-gray-200 hover:border-mitra-light-blue'}`}
           onClick={() => setSelectedModel('cryBuddy')}>
           <h4 className="font-medium">The Cry-Buddy</h4>
           <p className="text-sm text-gray-600">Listens and empathizes—just lets you vent and "cries" with you.</p>
           <p className="text-xs text-gray-500 mt-1">Use when you need to get it all out and feel heard.</p>
         </div>
         
-        <div className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedModel === 'mindReader' ? 'border-mitra-deep-pink bg-pink-50' : 'border-gray-200 hover:border-mitra-light-blue'}`}
+        <div className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedModel === 'mindReader' ? 'border-mitra-sky-blue bg-blue-50' : 'border-gray-200 hover:border-mitra-light-blue'}`}
           onClick={() => setSelectedModel('mindReader')}>
           <h4 className="font-medium">The Mind-Reader</h4>
           <p className="text-sm text-gray-600">Picks up on how you're feeling (tone, words) and mirrors it back so you really see your stress.</p>
@@ -174,7 +143,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
             variant="ghost" 
             size="icon" 
             onClick={toggleSidebar}
-            className="bg-mitra-pink hover:bg-pink-200 ml-2"
+            className="bg-mitra-light-blue hover:bg-blue-200 ml-2"
           >
             <ChevronRight size={20} />
           </Button>
@@ -182,7 +151,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
       )}
       
       <aside 
-        className={`bg-mitra-pink transition-all duration-300 ${
+        className={`bg-mitra-light-blue transition-all duration-300 ${
           isOpen ? 'w-64' : 'w-0 overflow-hidden'
         } min-h-screen flex flex-col`}
       >
@@ -193,7 +162,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
               variant="ghost" 
               size="icon" 
               onClick={toggleSidebar}
-              className="hover:bg-pink-200"
+              className="hover:bg-blue-200"
             >
               <ChevronLeft size={20} />
             </Button>
@@ -205,7 +174,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
             <li>
               <Button 
                 variant={activeTab === "home" ? "default" : "ghost"} 
-                className={`w-full justify-start gap-3 hover:bg-pink-200 ${activeTab === "home" ? "bg-pink-300" : ""}`}
+                className={`w-full justify-start gap-3 hover:bg-blue-200 ${activeTab === "home" ? "bg-blue-300" : ""}`}
                 onClick={() => handleTabClick("home")}
               >
                 <Home size={20} />
@@ -215,7 +184,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
             <li>
               <Button 
                 variant={activeTab === "history" ? "default" : "ghost"} 
-                className={`w-full justify-start gap-3 hover:bg-pink-200 ${activeTab === "history" ? "bg-pink-300" : ""}`}
+                className={`w-full justify-start gap-3 hover:bg-blue-200 ${activeTab === "history" ? "bg-blue-300" : ""}`}
                 onClick={() => handleTabClick("history")}
               >
                 <Clock size={20} />
@@ -225,21 +194,11 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
             <li>
               <Button 
                 variant={activeTab === "feedback" ? "default" : "ghost"} 
-                className={`w-full justify-start gap-3 hover:bg-pink-200 ${activeTab === "feedback" ? "bg-pink-300" : ""}`}
+                className={`w-full justify-start gap-3 hover:bg-blue-200 ${activeTab === "feedback" ? "bg-blue-300" : ""}`}
                 onClick={() => handleTabClick("feedback")}
               >
                 <MessageSquare size={20} />
                 <span className="ml-2">Feedback</span>
-              </Button>
-            </li>
-            <li>
-              <Button 
-                variant={activeTab === "domain" ? "default" : "ghost"} 
-                className={`w-full justify-start gap-3 hover:bg-pink-200 ${activeTab === "domain" ? "bg-pink-300" : ""}`}
-                onClick={() => handleTabClick("domain")}
-              >
-                <Globe size={20} />
-                <span className="ml-2">Domain</span>
               </Button>
             </li>
           </ul>
@@ -248,7 +207,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
         <div className="mt-auto p-4">
           <Button 
             variant={activeTab === "settings" ? "default" : "ghost"} 
-            className={`w-full justify-start gap-3 hover:bg-pink-200 ${activeTab === "settings" ? "bg-pink-300" : ""}`}
+            className={`w-full justify-start gap-3 hover:bg-blue-200 ${activeTab === "settings" ? "bg-blue-300" : ""}`}
             onClick={() => handleTabClick("settings")}
           >
             <Settings size={20} />
@@ -262,7 +221,6 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
               {activeTab === "home" && homeContent}
               {activeTab === "history" && historyContent}
               {activeTab === "feedback" && feedbackContent}
-              {activeTab === "domain" && domainContent}
               {activeTab === "settings" && settingsContent}
             </div>
           </div>

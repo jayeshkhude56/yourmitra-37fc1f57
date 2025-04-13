@@ -84,10 +84,18 @@ const Index = () => {
   };
 
   const endSession = () => {
+    // Cancel any speech synthesis that might be ongoing
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    
+    // Cancel any ongoing speech recognition
+    SpeechProcessor.stopListening();
+    
     setIsSessionActive(false);
     setCurrentConversation(null);
     
-    // Restore original SpeechProcessor method
+    // Restore original SpeechProcessor method if it exists
     const originalGetAIResponse = SpeechProcessor.getAIResponse;
   };
   
@@ -96,10 +104,19 @@ const Index = () => {
     if (isSessionActive) {
       startSession();
     }
+    
+    // Clean up function to handle component unmount
+    return () => {
+      // Make sure any speech or recognition is stopped
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      SpeechProcessor.stopListening();
+    };
   }, []);
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-blue-50 to-pink-50">
+    <div className="min-h-screen flex bg-gradient-to-br from-blue-50 to-white">
       {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       

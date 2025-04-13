@@ -166,6 +166,15 @@ export class SpeechProcessor {
       utterance.onend = onEnd;
     }
     
+    // Add natural pauses by inserting commas and pauses in the text
+    const processedText = text
+      .replace(/\. /g, ". <break time='500ms'/>")
+      .replace(/\? /g, "? <break time='600ms'/>")
+      .replace(/! /g, "! <break time='500ms'/>")
+      .replace(/, /g, ", <break time='300ms'/>");
+      
+    utterance.text = processedText;
+    
     this.speechSynthesis.speak(utterance);
   }
   
