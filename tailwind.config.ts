@@ -71,6 +71,14 @@ export default {
 					'neutral': '#F4F3F2',
 					'text': '#111111',
 					'accent': '#3361FF'
+				},
+				mitra: {
+					'pink': '#FFDEE2',
+					'deep-pink': '#D946EF',
+					'light-blue': '#D3E4FD',
+					'sky-blue': '#33C3F0',
+					'neutral': '#F1F1F1',
+					'text': '#222222'
 				}
 			},
 			borderRadius: {
@@ -113,12 +121,30 @@ export default {
 						transform: 'translateY(0)'
 					},
 				},
+				'breathing': {
+					'0%, 100%': {
+						transform: 'scale(1)'
+					},
+					'50%': {
+						transform: 'scale(1.1)'
+					}
+				},
+				'pulsate': {
+					'0%, 100%': {
+						opacity: '1'
+					},
+					'50%': {
+						opacity: '0.5'
+					}
+				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.5s ease-out',
 				'fade-up': 'fade-up 0.7s ease-out',
+				'breathing': 'breathing 4s ease-in-out infinite',
+				'pulse': 'pulsate 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
 			}
 		}
 	},

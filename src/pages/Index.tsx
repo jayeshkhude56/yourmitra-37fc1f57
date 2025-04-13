@@ -1,25 +1,42 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
-import Hero from '@/components/Hero';
-import Features from '@/components/Features';
-import Categories from '@/components/Categories';
-import Testimonials from '@/components/Testimonials';
-import CTA from '@/components/CTA';
-import Footer from '@/components/Footer';
+import Sidebar from '@/components/Sidebar';
+import MainContent from '@/components/MainContent';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSessionActive, setIsSessionActive] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const startSession = () => {
+    setIsSessionActive(true);
+  };
+
+  const endSession = () => {
+    setIsSessionActive(false);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main>
-        <Hero />
-        <Features />
-        <Categories />
-        <Testimonials />
-        <CTA />
-      </main>
-      <Footer />
+    <div className="min-h-screen flex bg-white">
+      {/* Sidebar */}
+      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      
+      {/* Main content */}
+      <div className="flex-1 flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <MainContent 
+            isSessionActive={isSessionActive}
+            startSession={startSession}
+            endSession={endSession}
+          />
+        </main>
+      </div>
     </div>
   );
 };

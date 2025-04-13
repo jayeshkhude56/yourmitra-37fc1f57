@@ -90,7 +90,7 @@
   }
 
   body {
-    @apply bg-white text-calmi-text font-light;
+    @apply bg-white text-mitra-text font-light;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -100,4 +100,42 @@
 
 .container {
   @apply px-4 md:px-6 mx-auto max-w-7xl;
+}
+
+/* Custom styles for Mitra */
+.breathing-circle {
+  animation: breathing 4s ease-in-out infinite;
+}
+
+@keyframes breathing {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.typing-animation::after {
+  content: '|';
+  animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Pink theme for Mitra */
+.bg-mitra-theme {
+  background-color: #FFDEE2;
+}
+
+.text-mitra-theme {
+  color: #D946EF;
+}
+
+.border-mitra-theme {
+  border-color: #FFDEE2;
 }
