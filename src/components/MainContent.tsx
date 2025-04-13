@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { MicOff } from 'lucide-react';
 import SpeechProcessor from '@/services/SpeechProcessor';
 
 interface MainContentProps {
@@ -17,6 +16,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   const [userText, setUserText] = useState("");
   const [responseText, setResponseText] = useState("");
   const [isMitraSpeaking, setIsMitraSpeaking] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isSessionActive) {
@@ -24,37 +24,54 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       setInterimText("");
       setUserText("");
       setResponseText("");
+      setVoiceError(null);
     } else {
       setIsBreathing(false);
       setUserSpeaking(false);
       setInterimText("");
       setUserText("");
       setResponseText("");
+      setVoiceError(null);
     }
   }, [isSessionActive]);
   
   const handleStartListening = () => {
     setUserSpeaking(true);
     setInterimText("");
+    setVoiceError(null);
     
     SpeechProcessor.startListening(
       (text) => {
         setInterimText(text);
+        if (text.trim().length === 0) {
+          setTimeout(() => {
+            if (text.trim().length === 0) {
+              setVoiceError("Sorry, I didn't get that. Could you please try again?");
+              setUserSpeaking(false);
+            }
+          }, 2000);
+        }
       },
       async (text) => {
-        setUserSpeaking(false);
-        setUserText(text);
-        setInterimText("");
-        
-        // Get AI response
-        const response = await SpeechProcessor.getAIResponse(text);
-        setResponseText(response);
-        
-        // Speak the response
-        setIsMitraSpeaking(true);
-        SpeechProcessor.speak(response, () => {
-          setIsMitraSpeaking(false);
-        });
+        if (text.trim().length > 0) {
+          setUserSpeaking(false);
+          setUserText(text);
+          setInterimText("");
+          setVoiceError(null);
+          
+          // Get AI response
+          const response = await SpeechProcessor.getAIResponse(text);
+          setResponseText(response);
+          
+          // Speak the response
+          setIsMitraSpeaking(true);
+          SpeechProcessor.speak(response, () => {
+            setIsMitraSpeaking(false);
+          });
+        } else {
+          setVoiceError("Sorry, I didn't get that. Could you please try again?");
+          setUserSpeaking(false);
+        }
       }
     );
   };
@@ -69,12 +86,47 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       <div className="flex flex-col items-center w-full">
         <div 
           onClick={userSpeaking ? handleStopListening : handleStartListening}
-          className={`w-40 h-40 rounded-full flex items-center justify-center mb-10 cursor-pointer
+          className={`w-40 h-40 rounded-full flex items-center justify-center mb-6 cursor-pointer
             ${(userSpeaking || isMitraSpeaking) ? 'animate-pulse' : 'breathing-circle'} 
             ${userSpeaking ? 'bg-mitra-light-blue' : 'bg-mitra-light-blue bg-opacity-70'}`}
         >
-          {/* Removed mic icon, breathing circle is now empty */}
+          {/* Empty breathing circle */}
         </div>
+
+        {/* Voice line visualization */}
+        {!voiceError ? (
+          <div className="h-8 mb-4 flex items-center">
+            {(userSpeaking || isMitraSpeaking || interimText) ? (
+              <div className="flex items-center justify-center space-x-1 h-8">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div 
+                    key={i}
+                    className="bg-mitra-deep-pink w-1 rounded-full"
+                    style={{
+                      height: `${Math.random() * 24 + (userSpeaking || isMitraSpeaking ? 8 : 4)}px`,
+                      animationDelay: `${i * 0.05}s`,
+                      animation: 'pulse 0.6s infinite'
+                    }}
+                  ></div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center space-x-1 h-8">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div 
+                    key={i}
+                    className="bg-gray-300 w-1 rounded-full"
+                    style={{
+                      height: `${4 + (i % 3) * 2}px`
+                    }}
+                  ></div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="h-8 mb-4 text-red-500 text-sm">{voiceError}</div>
+        )}
 
         <div className="mb-8 min-h-32 text-center">
           {interimText && (
@@ -100,7 +152,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           {!userSpeaking ? (
             <Button 
               onClick={handleStartListening}
-              className="bg-mitra-light-blue hover:bg-blue-500 text-white px-6 py-4 h-auto"
+              className="bg-mitra-light-blue hover:bg-blue-500 text-white px-6 py-4 h-auto rounded-full"
               disabled={isMitraSpeaking}
             >
               Speak to Mitra
@@ -109,7 +161,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             <Button 
               onClick={handleStopListening}
               variant="outline"
-              className="border-mitra-light-blue text-mitra-light-blue hover:bg-blue-50 px-6 py-4 h-auto"
+              className="border-mitra-light-blue text-mitra-light-blue hover:bg-blue-50 px-6 py-4 h-auto rounded-full"
             >
               Stop Speaking
             </Button>
@@ -118,7 +170,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           <Button 
             onClick={endSession}
             variant="outline"
-            className="border-gray-300 hover:bg-gray-50 px-6 py-4 h-auto"
+            className="border-gray-300 hover:bg-gray-50 px-6 py-4 h-auto rounded-full"
           >
             End Session
           </Button>
