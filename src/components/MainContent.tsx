@@ -68,14 +68,10 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
     <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto p-6">
       {!isSessionActive ? (
         <div className="text-center">
-          <h1 className="text-3xl font-medium mb-6">Welcome to Mitra</h1>
-          <p className="text-lg mb-10 text-gray-700">
-            Your personal AI companion to help you relieve stress and process emotions.
-            Speak freely, and I'm here to listen.
-          </p>
+          <h1 className="text-3xl font-medium mb-6">Speak with Mitra</h1>
           <Button 
             onClick={startSession}
-            className="bg-mitra-sky-blue hover:bg-blue-500 text-white px-8 py-6 h-auto text-lg rounded-full"
+            className="bg-mitra-light-blue hover:bg-blue-500 text-white px-8 py-6 h-auto text-lg rounded-full"
           >
             Begin
           </Button>
@@ -83,9 +79,10 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       ) : (
         <div className="flex flex-col items-center w-full">
           <div 
-            className={`w-40 h-40 rounded-full flex items-center justify-center mb-10
-              ${(userSpeaking || isMitraSpeaking) ? 'animate-pulse' : ''} 
-              ${userSpeaking ? 'bg-mitra-sky-blue' : 'bg-mitra-light-blue'}`}
+            onClick={userSpeaking ? handleStopListening : handleStartListening}
+            className={`w-40 h-40 rounded-full flex items-center justify-center mb-10 cursor-pointer
+              ${(userSpeaking || isMitraSpeaking) ? 'animate-pulse' : 'breathing-circle'} 
+              ${userSpeaking ? 'bg-mitra-light-blue' : 'bg-mitra-light-blue bg-opacity-70'}`}
           >
             <div className="text-center">
               {userSpeaking ? (
@@ -120,7 +117,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             {!userSpeaking ? (
               <Button 
                 onClick={handleStartListening}
-                className="bg-mitra-sky-blue hover:bg-blue-500 text-white px-6 py-4 h-auto"
+                className="bg-mitra-light-blue hover:bg-blue-500 text-white px-6 py-4 h-auto"
                 disabled={isMitraSpeaking}
               >
                 <Mic className="mr-2" /> Speak to Mitra
@@ -129,7 +126,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
               <Button 
                 onClick={handleStopListening}
                 variant="outline"
-                className="border-mitra-sky-blue text-mitra-sky-blue hover:bg-blue-50 px-6 py-4 h-auto"
+                className="border-mitra-light-blue text-mitra-light-blue hover:bg-blue-50 px-6 py-4 h-auto"
               >
                 <MicOff className="mr-2" /> Stop Speaking
               </Button>
