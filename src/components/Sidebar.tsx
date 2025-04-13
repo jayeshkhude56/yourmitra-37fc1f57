@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Home, Clock, MessageSquare, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -9,8 +9,34 @@ interface SidebarProps {
   toggleSidebar: () => void;
 }
 
+interface Conversation {
+  id: string;
+  timestamp: Date;
+  topic: string;
+  snippets: string[];
+}
+
 const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   const navigate = useNavigate();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  
+  // Load conversation history from localStorage on component mount
+  useEffect(() => {
+    const savedConversations = localStorage.getItem('mitra-conversations');
+    if (savedConversations) {
+      try {
+        const parsed = JSON.parse(savedConversations);
+        // Convert stored string timestamps back to Date objects
+        const conversations = parsed.map((conv: any) => ({
+          ...conv,
+          timestamp: new Date(conv.timestamp)
+        }));
+        setConversations(conversations);
+      } catch (error) {
+        console.error('Error parsing saved conversations', error);
+      }
+    }
+  }, []);
   
   // The content for each menu item
   const homeContent = (
@@ -24,12 +50,20 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   const historyContent = (
     <div className="p-6 bg-white rounded-lg shadow">
       <h3 className="text-lg font-medium mb-3">Session History</h3>
-      <p className="text-gray-600 mb-2">Your recent conversations:</p>
-      <ul className="space-y-2 text-gray-600">
-        <li className="p-2 bg-gray-50 rounded">Today, 2:15 PM - Discussion about AI</li>
-        <li className="p-2 bg-gray-50 rounded">Today, 10:30 AM - Meditation session</li>
-        <li className="p-2 bg-gray-50 rounded">Yesterday - Planning assistance</li>
-      </ul>
+      {conversations.length > 0 ? (
+        <>
+          <p className="text-gray-600 mb-2">Your recent conversations:</p>
+          <ul className="space-y-2 text-gray-600">
+            {conversations.map((conv) => (
+              <li key={conv.id} className="p-2 bg-gray-50 rounded">
+                {new Date(conv.timestamp).toLocaleString()} - {conv.topic}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <p className="text-gray-600">No conversation history yet. Start speaking with Mitra to create some!</p>
+      )}
     </div>
   );
   
@@ -105,7 +139,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
       >
         <div className="p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-medium">Mitra</h2>
+            <h2 className="text-xl font-bold">Mitra</h2>
             <Button 
               variant="ghost" 
               size="icon" 

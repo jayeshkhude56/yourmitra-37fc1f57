@@ -88,7 +88,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           onClick={userSpeaking ? handleStopListening : handleStartListening}
           className={`w-40 h-40 rounded-full flex items-center justify-center mb-6 cursor-pointer
             ${(userSpeaking || isMitraSpeaking) ? 'animate-pulse' : 'breathing-circle'} 
-            ${userSpeaking ? 'bg-mitra-light-blue' : 'bg-mitra-light-blue bg-opacity-70'}`}
+            ${userSpeaking ? 'bg-blue-400' : 'bg-blue-400 bg-opacity-70'}`}
         >
           {/* Empty breathing circle */}
         </div>
