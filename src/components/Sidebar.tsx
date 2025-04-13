@@ -180,14 +180,6 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
               <ChevronLeft size={20} />
             </Button>
           </div>
-          
-          {/* Voice Gender Selector */}
-          <div className="mt-4 flex justify-center">
-            <VoiceGenderSelector 
-              selectedGender={voiceGender} 
-              onGenderChange={handleVoiceGenderChange}
-            />
-          </div>
         </div>
 
         <nav className="flex-1 px-4">
@@ -226,6 +218,14 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
         </nav>
         
         <div className="mt-auto p-4">
+          {/* Voice Gender Selector - moved here before settings */}
+          <div className="mb-3 flex justify-center">
+            <VoiceGenderSelector 
+              selectedGender={voiceGender} 
+              onGenderChange={handleVoiceGenderChange}
+            />
+          </div>
+        
           <Button 
             variant={activeTab === "settings" ? "default" : "ghost"} 
             className={`w-full justify-start gap-3 hover:bg-blue-200 ${activeTab === "settings" ? "bg-blue-300" : ""}`}
