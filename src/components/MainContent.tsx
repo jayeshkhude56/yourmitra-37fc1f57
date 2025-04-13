@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import SpeechProcessor from '@/services/SpeechProcessor';
@@ -44,7 +45,6 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   const handleGenderChange = (gender: 'male' | 'female') => {
     setSelectedGender(gender);
     SpeechProcessor.setVoiceGender(gender);
-    localStorage.setItem('mitra-voice-gender', gender);
     console.log(`Voice gender set to: ${gender}`);
   };
   
@@ -127,7 +127,12 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto p-6">
       <div className="flex flex-col items-center w-full">
-        {/* Remove the voice gender selector from this section */}
+        {/* Voice Gender Selector */}
+        <VoiceGenderSelector 
+          selectedGender={selectedGender}
+          onGenderChange={handleGenderChange}
+        />
+
         <div 
           onClick={userSpeaking ? handleStopListening : handleStartListening}
           className={`w-40 h-40 rounded-full flex items-center justify-center mb-6 cursor-pointer
