@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import SpeechProcessor from '@/services/SpeechProcessor';
@@ -19,6 +18,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   const [voiceError, setVoiceError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("Session active state changed:", isSessionActive);
     if (isSessionActive) {
       setIsBreathing(true);
       setInterimText("");
@@ -36,6 +36,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   }, [isSessionActive]);
   
   const handleStartListening = () => {
+    console.log("Starting to listen for user speech");
     setUserSpeaking(true);
     setInterimText("");
     setVoiceError(null);
@@ -43,32 +44,45 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
     SpeechProcessor.startListening(
       (text) => {
         setInterimText(text);
+        console.log("Received interim text:", text);
+        
         if (text.trim().length === 0) {
           setTimeout(() => {
             if (text.trim().length === 0) {
               setVoiceError("Sorry, I didn't get that. Could you please try again?");
               setUserSpeaking(false);
+              console.log("No speech detected after timeout");
             }
           }, 2000);
         }
       },
       async (text) => {
+        console.log("Received final speech text:", text);
         if (text.trim().length > 0) {
           setUserSpeaking(false);
           setUserText(text);
           setInterimText("");
           setVoiceError(null);
           
-          // Get AI response
-          const response = await SpeechProcessor.getAIResponse(text);
-          setResponseText(response);
-          
-          // Speak the response
-          setIsMitraSpeaking(true);
-          SpeechProcessor.speak(response, () => {
-            setIsMitraSpeaking(false);
-          });
+          console.log("Getting AI response for text:", text);
+          try {
+            const response = await SpeechProcessor.getAIResponse(text);
+            console.log("Received AI response:", response);
+            
+            setResponseText(response);
+            
+            console.log("Speaking AI response");
+            setIsMitraSpeaking(true);
+            SpeechProcessor.speak(response, () => {
+              console.log("AI finished speaking");
+              setIsMitraSpeaking(false);
+            });
+          } catch (error) {
+            console.error("Error getting or speaking AI response:", error);
+            setVoiceError("Sorry, I had trouble processing that. Could you please try again?");
+          }
         } else {
+          console.log("Empty speech detected");
           setVoiceError("Sorry, I didn't get that. Could you please try again?");
           setUserSpeaking(false);
         }
@@ -77,21 +91,24 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   };
   
   const handleStopListening = () => {
+    console.log("Stopping listening for user speech");
     setUserSpeaking(false);
     SpeechProcessor.stopListening();
   };
   
   const handleEndSession = () => {
-    // Make sure we're stopping any ongoing speech or listening
+    console.log("Ending session");
+    
     SpeechProcessor.stopListening();
     if (isMitraSpeaking) {
       window.speechSynthesis?.cancel();
+      console.log("Cancelled ongoing speech");
     }
     setIsMitraSpeaking(false);
     setUserSpeaking(false);
     
-    // Now call the parent's endSession function
     endSession();
+    console.log("Session ended");
   };
 
   return (
@@ -106,7 +123,6 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           {/* Empty breathing circle with no text */}
         </div>
 
-        {/* Voice line visualization */}
         {!voiceError ? (
           <div className="h-8 mb-4 flex items-center">
             {(userSpeaking || isMitraSpeaking || interimText) ? (
