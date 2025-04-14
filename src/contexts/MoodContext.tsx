@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useToast } from "@/hooks/use-toast";
 
 // Define mood types
-export type MoodType = 'neutral' | 'calm' | 'happy' | 'sad' | 'anxious' | 'angry';
+export type MoodType = 'neutral' | 'happy' | 'sad' | 'angry';
 
 // Define ambient sound types
 export type AmbientSoundType = 'none' | 'rain' | 'wind' | 'fire';

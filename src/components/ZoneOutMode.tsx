@@ -1,165 +1,120 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Stars, Waves, CloudSun, Trees, Volume2, VolumeX } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Star, Cloud, Waves, Music, PauseCircle, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useMood } from '@/contexts/MoodContext';
+
+type VisualType = 'stars' | 'clouds' | 'waves' | 'nature';
 
 const ZoneOutMode = () => {
-  const { currentMood } = useMood();
   const [isActive, setIsActive] = useState(false);
-  const [currentVisual, setCurrentVisual] = useState<'stars' | 'waves' | 'clouds' | 'nature'>('stars');
-  const [isMuted, setIsMuted] = useState(false);
+  const [currentVisual, setCurrentVisual] = useState<VisualType>('stars');
+  
+  // Change visuals randomly when active
+  useEffect(() => {
+    let visualInterval: NodeJS.Timeout;
+    
+    if (isActive) {
+      visualInterval = setInterval(() => {
+        const visuals: VisualType[] = ['stars', 'clouds', 'waves', 'nature'];
+        const nextVisual = visuals[Math.floor(Math.random() * visuals.length)];
+        setCurrentVisual(nextVisual);
+      }, 20000); // Change every 20 seconds
+    }
+    
+    return () => {
+      if (visualInterval) clearInterval(visualInterval);
+    };
+  }, [isActive]);
   
   const toggleZoneOut = () => {
     setIsActive(!isActive);
   };
   
-  const changeVisual = (visual: 'stars' | 'waves' | 'clouds' | 'nature') => {
-    setCurrentVisual(visual);
-  };
-  
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
-  
-  const getVisualComponent = () => {
+  const getVisualIcon = () => {
     switch (currentVisual) {
-      case 'stars':
-        return (
-          <div className="bg-indigo-900 rounded-lg h-32 flex items-center justify-center overflow-hidden">
-            <div className="stars-animation">
-              {Array.from({ length: 20 }).map((_, i) => (
-                <div key={i} className="star" style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 3}s`
-                }}></div>
-              ))}
-            </div>
-            <p className="text-white text-center text-sm px-4">No pressure, just some quiet vibes to float in...</p>
-          </div>
-        );
-      case 'waves':
-        return (
-          <div className="bg-blue-800 rounded-lg h-32 flex items-center justify-center overflow-hidden">
-            <div className="waves-animation">
-              <div className="wave"></div>
-              <div className="wave" style={{ animationDelay: '1s' }}></div>
-              <div className="wave" style={{ animationDelay: '2s' }}></div>
-            </div>
-            <p className="text-white text-center text-sm px-4">Take what you need, leave what you don't...</p>
-          </div>
-        );
-      case 'clouds':
-        return (
-          <div className="bg-blue-300 rounded-lg h-32 flex items-center justify-center overflow-hidden">
-            <div className="clouds-animation">
-              <div className="cloud"></div>
-              <div className="cloud" style={{ animationDelay: '5s', top: '60%' }}></div>
-              <div className="cloud" style={{ animationDelay: '10s', top: '40%' }}></div>
-            </div>
-            <p className="text-gray-700 text-center text-sm px-4">I'm right here with you...</p>
-          </div>
-        );
-      case 'nature':
-        return (
-          <div className="bg-green-800 rounded-lg h-32 flex items-center justify-center overflow-hidden">
-            <div className="nature-animation">
-              <div className="tree"></div>
-              <div className="tree" style={{ left: '60%', height: '70%' }}></div>
-              <div className="tree" style={{ left: '30%', height: '85%' }}></div>
-            </div>
-            <p className="text-white text-center text-sm px-4">Just breathe and be...</p>
-          </div>
-        );
-      default:
-        return null;
+      case 'stars': return <Star className="h-6 w-6 text-purple-400" />;
+      case 'clouds': return <Cloud className="h-6 w-6 text-blue-400" />;
+      case 'waves': return <Waves className="h-6 w-6 text-cyan-400" />;
+      case 'nature': return <Music className="h-6 w-6 text-green-400" />;
+      default: return <Star className="h-6 w-6 text-purple-400" />;
     }
   };
   
   return (
     <Card className="rounded-xl overflow-hidden shadow-md">
-      <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
-        <CardTitle className="text-xl flex items-center">
-          <span className="mr-2">💤</span> Zone Out Mode
+      <CardHeader className={`${isActive ? 'bg-gradient-to-r from-blue-100/50 to-purple-100/50 animate-pulse' : 'bg-gradient-to-r from-gray-50 to-blue-50'}`}>
+        <CardTitle className="text-xl flex items-center justify-between">
+          <span>Zone Out Mode</span>
+          {isActive && getVisualIcon()}
         </CardTitle>
       </CardHeader>
-      
-      <CardContent className="pt-4">
+      <CardContent className={`relative overflow-hidden ${isActive ? 'min-h-32' : ''}`}>
         {isActive ? (
           <div className="space-y-4">
-            {getVisualComponent()}
+            <p className="text-sm text-center italic">
+              "No pressure, just some quiet vibes to float in. Take what you need, leave what you don't."
+            </p>
             
-            <div className="grid grid-cols-4 gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => changeVisual('stars')}
-                className={`flex flex-col items-center py-3 ${currentVisual === 'stars' ? 'bg-indigo-50 border-indigo-200' : ''}`}
-              >
-                <Stars size={18} />
-                <span className="text-xs mt-1">Stars</span>
-              </Button>
+            <div className="absolute inset-0 -z-10 opacity-20">
+              {currentVisual === 'stars' && (
+                <div className="absolute inset-0">
+                  {[...Array(20)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute rounded-full bg-white w-1 h-1 animate-pulse"
+                      style={{
+                        top: `${Math.random() * 100}%`,
+                        left: `${Math.random() * 100}%`,
+                        animationDelay: `${Math.random() * 2}s`,
+                        animationDuration: `${2 + Math.random() * 3}s`,
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
               
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => changeVisual('waves')}
-                className={`flex flex-col items-center py-3 ${currentVisual === 'waves' ? 'bg-blue-50 border-blue-200' : ''}`}
-              >
-                <Waves size={18} />
-                <span className="text-xs mt-1">Waves</span>
-              </Button>
+              {currentVisual === 'clouds' && (
+                <div className="absolute inset-0 bg-gradient-to-b from-blue-100 to-white"></div>
+              )}
               
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => changeVisual('clouds')}
-                className={`flex flex-col items-center py-3 ${currentVisual === 'clouds' ? 'bg-blue-50 border-blue-200' : ''}`}
-              >
-                <CloudSun size={18} />
-                <span className="text-xs mt-1">Clouds</span>
-              </Button>
+              {currentVisual === 'waves' && (
+                <div className="absolute inset-0 bg-gradient-to-b from-cyan-100 to-blue-200"></div>
+              )}
               
+              {currentVisual === 'nature' && (
+                <div className="absolute inset-0 bg-gradient-to-b from-green-100 to-yellow-100"></div>
+              )}
+            </div>
+            
+            <div className="flex justify-center relative z-10">
               <Button 
+                onClick={toggleZoneOut}
                 variant="outline" 
-                size="sm" 
-                onClick={() => changeVisual('nature')}
-                className={`flex flex-col items-center py-3 ${currentVisual === 'nature' ? 'bg-green-50 border-green-200' : ''}`}
+                className="rounded-full flex gap-2 items-center bg-white/50 backdrop-blur-sm border-white/20"
               >
-                <Trees size={18} />
-                <span className="text-xs mt-1">Nature</span>
+                <PauseCircle className="h-4 w-4" />
+                <span>Exit Zone Out</span>
               </Button>
             </div>
           </div>
         ) : (
-          <div className="py-6 text-center text-gray-500">
-            <p>A gentle space to zone out without pressure.</p>
-            <p className="text-sm mt-2">Soft visuals and ambient sounds to help you rest.</p>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Zone Out Mode provides a quiet space with soft visuals and gentle sounds where you can just be — no expectations or pressure.
+            </p>
+            <div className="flex justify-center">
+              <Button 
+                onClick={toggleZoneOut}
+                className="rounded-full flex gap-2 items-center bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+              >
+                <PlayCircle className="h-4 w-4" />
+                <span>Enter Zone Out Mode</span>
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
-      
-      <CardFooter className="flex justify-between">
-        <Button 
-          variant={isActive ? "destructive" : "default"}
-          onClick={toggleZoneOut}
-          className="rounded-lg"
-        >
-          {isActive ? "Exit Zone Out" : "Enter Zone Out"}
-        </Button>
-        
-        {isActive && (
-          <Button 
-            variant="outline"
-            onClick={toggleMute}
-            className="rounded-lg"
-          >
-            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-          </Button>
-        )}
-      </CardFooter>
     </Card>
   );
 };

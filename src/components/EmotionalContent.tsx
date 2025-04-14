@@ -13,10 +13,8 @@ const EmotionalContent = () => {
   
   const getMoodBackground = () => {
     switch (currentMood) {
-      case 'calm': return 'bg-gradient-to-tr from-blue-50 to-blue-100';
       case 'happy': return 'bg-gradient-to-tr from-orange-50 to-orange-100';
       case 'sad': return 'bg-gradient-to-tr from-gray-50 to-gray-100';
-      case 'anxious': return 'bg-gradient-to-tr from-yellow-50 to-yellow-100';
       case 'angry': return 'bg-gradient-to-tr from-red-50 to-red-100';
       default: return 'bg-gradient-to-tr from-purple-50 to-purple-100';
     }
