@@ -1,11 +1,10 @@
+
 import { useState } from 'react';
 
 export class SpeechProcessor {
   private recognition: SpeechRecognition | null = null;
   private speechSynthesis: SpeechSynthesis;
   private isListening: boolean = false;
-  private currentAIModel: string = 'coach'; // Default AI model
-  private voiceGender: 'male' | 'female' = 'male'; // Default voice gender
   
   constructor() {
     // Check if browser supports Web Speech API
@@ -22,24 +21,6 @@ export class SpeechProcessor {
     }
     
     this.speechSynthesis = window.speechSynthesis;
-    
-    // Get the saved model from localStorage if available
-    const savedModel = localStorage.getItem('mitra-selected-model');
-    if (savedModel) {
-      this.currentAIModel = savedModel;
-      console.log(`Loaded AI model from localStorage: ${savedModel}`);
-    } else {
-      console.log(`Using default AI model: ${this.currentAIModel}`);
-    }
-    
-    // Get the saved voice gender from localStorage if available
-    const savedGender = localStorage.getItem('mitra-voice-gender');
-    if (savedGender && (savedGender === 'male' || savedGender === 'female')) {
-      this.voiceGender = savedGender;
-      console.log(`Loaded voice gender from localStorage: ${savedGender}`);
-    } else {
-      console.log(`Using default voice gender: ${this.voiceGender}`);
-    }
   }
   
   public startListening(onInterimResult: (text: string) => void, onFinalResult: (text: string) => void): void {
@@ -90,29 +71,6 @@ export class SpeechProcessor {
     }
   }
   
-  // Set the current AI model
-  public setAIModel(model: string): void {
-    this.currentAIModel = model;
-    console.log(`AI model set to: ${model}`);
-  }
-  
-  // Get the current AI model
-  public getAIModel(): string {
-    return this.currentAIModel;
-  }
-  
-  // Set the voice gender
-  public setVoiceGender(gender: 'male' | 'female'): void {
-    this.voiceGender = gender;
-    localStorage.setItem('mitra-voice-gender', gender);
-    console.log(`Voice gender set to: ${gender}`);
-  }
-  
-  // Get the current voice gender
-  public getVoiceGender(): string {
-    return this.voiceGender;
-  }
-  
   // Add natural pauses to speech for more human-like delivery
   private addSpeechPauses(text: string): string {
     // Add commas for slight pauses
@@ -134,28 +92,14 @@ export class SpeechProcessor {
       return;
     }
     
-    console.log(`Speaking with ${this.currentAIModel} personality using ${this.voiceGender} voice: "${text}"`);
+    console.log(`Speaking: "${text}"`);
     
     // Stop any current speech
     this.speechSynthesis.cancel();
     
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Check current AI model from localStorage again in case it changed
-    const savedModel = localStorage.getItem('mitra-selected-model');
-    if (savedModel) {
-      this.currentAIModel = savedModel;
-      console.log(`Updated AI model from localStorage: ${savedModel}`);
-    }
-    
-    // Check current voice gender from localStorage again in case it changed
-    const savedGender = localStorage.getItem('mitra-voice-gender');
-    if (savedGender && (savedGender === 'male' || savedGender === 'female')) {
-      this.voiceGender = savedGender as 'male' | 'female';
-      console.log(`Updated voice gender from localStorage: ${savedGender}`);
-    }
-    
-    // Select a voice based on the AI model and gender
+    // Select the best female voice
     const voices = this.speechSynthesis.getVoices();
     let preferredVoice = null;
     
@@ -165,67 +109,40 @@ export class SpeechProcessor {
       console.log(`Voice ${index}: ${voice.name} (${voice.lang})`);
     });
     
-    // First priority: find a voice matching both model and gender
-    if (this.voiceGender === 'female') {
-      console.log('Looking for female voice...');
-      preferredVoice = voices.find(voice => 
-        voice.name.includes('Female') || 
-        voice.name.includes('Samantha') || 
-        voice.name.includes('Victoria') ||
-        voice.name.includes('Karen')
-      );
-    } else {
-      console.log('Looking for male voice...');
-      preferredVoice = voices.find(voice => 
-        voice.name.includes('Male') || 
-        voice.name.includes('Daniel') || 
-        voice.name.includes('Google UK English Male') ||
-        voice.name.includes('David')
-      );
+    // Look for best female voice
+    console.log('Looking for best female voice...');
+    preferredVoice = voices.find(voice => 
+      voice.name.includes('Samantha') ||
+      voice.name.includes('Victoria') ||
+      voice.name.includes('Female') ||
+      voice.name.includes('Karen') ||
+      voice.name.includes('Google UK English Female')
+    );
+    
+    // If no female voice found, use any available voice
+    if (!preferredVoice && voices.length > 0) {
+      preferredVoice = voices[0];
     }
     
-    // Apply personality-specific settings
-    switch(this.currentAIModel) {
-      case 'coach':
-        utterance.rate = this.voiceGender === 'female' ? 0.97 : 0.95;
-        utterance.pitch = this.voiceGender === 'female' ? 1.05 : 1.0;
-        console.log(`Using coach voice profile with ${this.voiceGender} voice - authoritative but friendly`);
-        break;
-        
-      case 'cryBuddy':
-        utterance.rate = this.voiceGender === 'female' ? 0.83 : 0.85;
-        utterance.pitch = this.voiceGender === 'female' ? 1.2 : 1.1;
-        console.log(`Using cry-buddy voice profile with ${this.voiceGender} voice - soft and empathetic`);
-        break;
-        
-      case 'mindReader':
-        utterance.rate = this.voiceGender === 'female' ? 0.88 : 0.9;
-        utterance.pitch = this.voiceGender === 'female' ? 1.0 : 0.95;
-        console.log(`Using mind-reader voice profile with ${this.voiceGender} voice - neutral and analytical`);
-        break;
-        
-      default:
-        utterance.rate = 0.9;
-        utterance.pitch = this.voiceGender === 'female' ? 1.05 : 1.0;
-        console.log(`Using default voice profile with ${this.voiceGender} voice`);
-    }
+    // Use soft, gentle voice settings
+    utterance.rate = 0.9;  // Slightly slower
+    utterance.pitch = 1.05; // Slightly higher pitch for female voice
+    utterance.volume = 1.0; // Full volume
     
     if (preferredVoice) {
       utterance.voice = preferredVoice;
-      console.log(`Selected ${this.voiceGender} voice: ${preferredVoice.name}`);
+      console.log(`Selected voice: ${preferredVoice.name}`);
     } else {
-      console.warn(`No matching ${this.voiceGender} voice found, using default browser voice`);
+      console.warn('No preferred voice found, using default browser voice');
     }
     
     // Adjust parameters based on text content for more natural delivery
     if (text.includes('!') || text.toLowerCase().includes('urgent') || text.toLowerCase().includes('immediately')) {
-      utterance.rate += 0.15; // Speak faster for urgent content
-      console.log('Detected urgent content, increasing speech rate');
+      utterance.rate += 0.05; // Speak slightly faster for urgent content
     }
     
     if (text.toLowerCase().includes('calm') || text.toLowerCase().includes('relax') || text.toLowerCase().includes('breathe')) {
-      utterance.rate -= 0.15; // Speak slower for calming content
-      console.log('Detected calming content, decreasing speech rate');
+      utterance.rate -= 0.05; // Speak slightly slower for calming content
     }
     
     if (onEnd) {
@@ -247,125 +164,157 @@ export class SpeechProcessor {
     this.speechSynthesis.speak(utterance);
   }
   
-  // AI response generation based on the selected model
+  // AI response generation based on emotional intelligence
   public async getAIResponse(userText: string): Promise<string> {
-    console.log('Getting AI response for model:', this.currentAIModel);
+    console.log('Getting AI response');
     console.log('User input:', userText);
     
-    // Check current AI model from localStorage again in case it changed
-    const savedModel = localStorage.getItem('mitra-selected-model');
-    if (savedModel) {
-      this.currentAIModel = savedModel;
-      console.log('Updated model from localStorage:', savedModel);
-    }
-    
-    let responses: string[] = [];
-    
-    switch(this.currentAIModel) {
-      case 'coach':
-        console.log('Generating coach-style response');
-        responses = [
-          "Let's take a strategic approach to managing this situation.",
-          "I notice tension. Let's break this down into actionable steps.",
-          "What specific strategy can help you move forward right now?",
-          "Let's identify one concrete action you can take today.",
-          "Remember, progress is made through consistent, small steps.",
-          "I hear you. What would be a small, achievable goal to focus on first?",
-          "Let's practice a breathing exercise together to create some mental space.",
-          "What resources do you have available that could help with this challenge?",
-          "Focus on what you can control, and let's make a plan for that."
-        ];
-        break;
-        
-      case 'cryBuddy':
-        console.log('Generating cry-buddy style response');
-        responses = [
-          "I hear how deeply this is affecting you. Your feelings are completely valid.",
-          "That sounds incredibly overwhelming. I'm here to listen without judgment.",
-          "It's okay to feel everything you're feeling right now.",
-          "This must be so difficult. Thank you for sharing your vulnerability.",
-          "Some moments are just hard. And that's okay.",
-          "I'm right here with you through all of these emotions.",
-          "Sometimes we just need space to feel, and that's perfectly alright.",
-          "Your feelings matter, and I'm here to hold space for all of them.",
-          "It's brave of you to acknowledge these difficult emotions."
-        ];
-        break;
-        
-      case 'mindReader':
-        console.log('Generating mind-reader style response');
-        responses = [
-          "I notice the underlying tension in your words. What's really going on?",
-          "Your language suggests there's more beneath the surface. Want to explore that?",
-          "I'm sensing some unspoken emotions. Would you like to unpack them?",
-          "The way you described that reveals a lot about what you might be experiencing.",
-          "There seems to be a disconnect between what you're saying and what you're feeling.",
-          "I'm noticing a pattern in how you approach these situations. Are you aware of it?",
-          "Your choice of words indicates some hesitation. Let's examine that together.",
-          "The emotion behind your words seems stronger than what you're directly expressing.",
-          "What remains unsaid may be the most important part of what you're sharing."
-        ];
-        break;
-    }
-    
-    // Select a response based on keywords in user input for more relevance
-    let bestResponse = null;
-    const keywords = {
+    // Detect emotional tone in user's text
+    const emotionKeywords = {
       anxiety: ["anxious", "nervous", "worry", "stress", "panic", "overwhelm"],
       sadness: ["sad", "depressed", "unhappy", "down", "blue", "miserable", "grief"],
       anger: ["angry", "frustrated", "mad", "irritated", "annoyed", "upset"],
       fear: ["afraid", "scared", "fearful", "terrified", "dread", "worry"],
-      work: ["job", "career", "work", "boss", "colleague", "project", "deadline"],
-      relationships: ["friend", "partner", "family", "husband", "wife", "parent", "child"]
+      happiness: ["happy", "joy", "excited", "glad", "pleased", "content"],
+      calm: ["calm", "peaceful", "relaxed", "serene", "tranquil", "quiet"]
     };
     
-    // Check if any keywords are in the user text
-    let matchedCategory = null;
-    for (const [category, words] of Object.entries(keywords)) {
-      if (words.some(word => userText.toLowerCase().includes(word))) {
-        matchedCategory = category;
+    // Check if any emotional keywords are present
+    let detectedEmotion = null;
+    const lowerText = userText.toLowerCase();
+    
+    for (const [emotion, words] of Object.entries(emotionKeywords)) {
+      if (words.some(word => lowerText.includes(word))) {
+        detectedEmotion = emotion;
         break;
       }
     }
     
-    // If we matched a category, try to find a response that matches
-    if (matchedCategory) {
-      console.log(`Matched keyword category: ${matchedCategory}`);
+    // Base responses collection - warm, compassionate, and emotionally intelligent
+    let responses = [
+      "I'm here with you. What do you need in this moment?",
+      "Thank you for sharing that with me. How can I support you right now?",
+      "I appreciate you opening up. Let's sit with this feeling together.",
+      "It takes courage to express what you're going through. I'm listening.",
+      "You're not alone in how you're feeling. I'm here with you.",
+      "Sometimes just being heard can make a difference. I'm here for that.",
+      "Your feelings are valid and important. Thank you for sharing them.",
+      "I'm holding space for whatever you need to express right now.",
+      "However you're feeling, it's okay. There's no rush to feel differently."
+    ];
+    
+    // Add emotion-specific responses if emotion detected
+    if (detectedEmotion) {
+      console.log(`Detected emotion: ${detectedEmotion}`);
       
-      // Add more specific responses based on the matched category
-      switch(this.currentAIModel) {
-        case 'coach':
-          if (matchedCategory === 'anxiety') {
-            responses.push("Let's try a quick breathing exercise to reduce that anxiety.");
-            responses.push("When anxious thoughts arise, notice them without judgment.");
-          } else if (matchedCategory === 'work') {
-            responses.push("What's one small task you can complete to make progress on this work challenge?");
-            responses.push("Work stress often comes from unclear boundaries. Where might you need stronger boundaries?");
-          }
+      switch(detectedEmotion) {
+        case 'anxiety':
+          responses = responses.concat([
+            "I notice you might be feeling anxious. Let's take a moment to breathe together.",
+            "When anxiety comes up, it's helpful to ground yourself. Is there something you can see or touch nearby?",
+            "Anxiety can feel overwhelming, but remember it's just a wave that will eventually recede.",
+            "Your nervous system is sending you signals. Let's honor them and find some calm together.",
+            "It's okay to feel anxious. Your body is trying to protect you, even if it feels uncomfortable."
+          ]);
           break;
           
-        case 'cryBuddy':
-          if (matchedCategory === 'sadness') {
-            responses.push("That sadness you're feeling is so valid. It's okay to sit with it for a while.");
-            responses.push("I hear the deep sadness in your words. I'm here with you in this moment.");
-          } else if (matchedCategory === 'relationships') {
-            responses.push("Relationships can bring up such complex feelings. All of those emotions deserve space.");
-            responses.push("The connections we have with others can be so meaningful, and also so painful sometimes.");
-          }
+        case 'sadness':
+          responses = responses.concat([
+            "I hear the sadness in your words. It's okay to feel this way.",
+            "Sadness has its own wisdom. I'm sitting with you in this feeling.",
+            "Some days are heavier than others. I'm here on the heavy days too.",
+            "Your tears, whether falling or held back, are honored here.",
+            "Sadness is a natural part of being human. You're not alone in this feeling."
+          ]);
           break;
           
-        case 'mindReader':
-          if (matchedCategory === 'anger') {
-            responses.push("I notice there's anger in your words. What's underneath that emotion?");
-            responses.push("That frustration might be pointing to something important that needs your attention.");
-          } else if (matchedCategory === 'fear') {
-            responses.push("Fear often speaks to what we value most. What are you afraid of losing?");
-            responses.push("I'm hearing some fear in your voice. Let's explore what's behind that.");
-          }
+        case 'anger':
+          responses = responses.concat([
+            "I can sense there's some frustration there. Your feelings are valid.",
+            "Anger often protects deeper emotions. What might be beneath this feeling?",
+            "It's okay to feel angry. Sometimes anger is exactly the right response.",
+            "I honor your anger and the important message it carries.",
+            "When you're ready, we can explore what this anger is telling you."
+          ]);
+          break;
+          
+        case 'fear':
+          responses = responses.concat([
+            "Fear can feel so isolating, but you're not alone with it.",
+            "Being afraid is part of being human. What would help you feel safer right now?",
+            "I hear that you're scared. Let's be gentle with that feeling.",
+            "Fear is your body's way of trying to keep you safe. What does your fear need right now?",
+            "It takes courage to acknowledge fear. You're doing that right now."
+          ]);
+          break;
+          
+        case 'happiness':
+          responses = responses.concat([
+            "That joy in your words is beautiful to hear.",
+            "Happiness looks wonderful on you. What else brings you this feeling?",
+            "I'm smiling along with you. These moments are precious.",
+            "It's lovely to share in your happiness. Thank you for that gift.",
+            "Joy is contagious - I can feel it in your words!"
+          ]);
+          break;
+          
+        case 'calm':
+          responses = responses.concat([
+            "That sense of peace is something to treasure.",
+            "Calm moments like these help restore us. I'm glad you're experiencing this.",
+            "There's wisdom in finding tranquility. What helped you reach this peaceful state?",
+            "This calmness is a beautiful space to rest in.",
+            "Moments of serenity are so precious. I'm glad you're in one right now."
+          ]);
           break;
       }
     }
     
+    // Look for questions that need answers
+    if (userText.includes("?") || 
+        lowerText.includes("how do i") || 
+        lowerText.includes("what should") || 
+        lowerText.includes("can you help")) {
+      
+      console.log("Question detected, providing helpful response");
+      
+      // Add helpful responses for questions
+      responses = responses.concat([
+        "That's a thoughtful question. While I don't have all the answers, I wonder what your intuition tells you?",
+        "Questions like that show you're reflecting deeply. What feels right to you in this moment?",
+        "I hear you seeking clarity. Sometimes sitting with questions is as important as finding answers.",
+        "That's something many of us wonder about. What would feel supportive to you right now?",
+        "Great question. Let's explore that together and see what resonates with you."
+      ]);
+    }
+    
+    // Check for gratitude and respond appropriately
+    if (lowerText.includes("thank") || lowerText.includes("appreciate") || lowerText.includes("grateful")) {
+      console.log("Gratitude detected, responding warmly");
+      
+      responses = [
+        "I'm grateful for our connection too. It means a lot to be here with you.",
+        "Your kindness warms my heart. Thank you for being here.",
+        "It's truly my pleasure to be here with you. Thank you for sharing your time with me.",
+        "I appreciate you too. These moments together matter.",
+        "Thank you for your kind words. They mean a lot to me."
+      ];
+    }
+    
+    // Check for greetings and respond appropriately
+    if (lowerText.startsWith("hi") || lowerText.startsWith("hello") || lowerText.startsWith("hey")) {
+      console.log("Greeting detected, responding warmly");
+      
+      responses = [
+        "Hello there. It's so nice to be with you today. How are you feeling?",
+        "Hi friend. I'm really glad you're here. How is your heart today?",
+        "Hello! It's wonderful to connect with you. What brings you here today?",
+        "Hey there. I'm here and ready to listen whenever you're ready to share.",
+        "Hi! Your presence brightens my day. How are you feeling right now?"
+      ];
+    }
+    
+    // Select a response
     const response = responses[Math.floor(Math.random() * responses.length)];
     console.log('Generated AI response:', response);
     

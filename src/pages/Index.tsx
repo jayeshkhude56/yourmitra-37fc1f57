@@ -21,19 +21,9 @@ const Index = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSessionActive, setIsSessionActive] = useState(true);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
-  const [selectedGender, setSelectedGender] = useState<'male' | 'female'>(() => {
-    const savedGender = localStorage.getItem('mitra-voice-gender');
-    return (savedGender === 'female' ? 'female' : 'male');
-  });
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const handleGenderChange = (gender: 'male' | 'female') => {
-    setSelectedGender(gender);
-    SpeechProcessor.setVoiceGender(gender);
-    localStorage.setItem('mitra-voice-gender', gender);
   };
 
   const startSession = () => {
@@ -106,9 +96,6 @@ const Index = () => {
     
     setIsSessionActive(false);
     setCurrentConversation(null);
-    
-    // Restore original SpeechProcessor method if it exists
-    const originalGetAIResponse = SpeechProcessor.getAIResponse;
   };
   
   // Start a session automatically when component mounts
@@ -133,9 +120,7 @@ const Index = () => {
         {/* Sidebar */}
         <Sidebar 
           isOpen={isSidebarOpen} 
-          toggleSidebar={toggleSidebar} 
-          selectedGender={selectedGender}
-          onGenderChange={handleGenderChange}
+          toggleSidebar={toggleSidebar}
         />
         
         {/* Main content */}

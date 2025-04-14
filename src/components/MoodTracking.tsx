@@ -5,7 +5,7 @@ import { Smile, Frown, Meh } from 'lucide-react';
 import { useMood, MoodType } from '@/contexts/MoodContext';
 
 const MoodTracking = () => {
-  const { moodHistory } = useMood();
+  const { moodHistory, journalEntries } = useMood();
   
   const getMoodIcon = (mood: MoodType) => {
     switch (mood) {
@@ -50,11 +50,70 @@ const MoodTracking = () => {
     return date.toLocaleDateString();
   };
   
-  const recentMoods = moodHistory.slice(0, 7); // Only show last 7 moods
+  const getMoodInsight = () => {
+    if (moodHistory.length < 3) return null;
+    
+    // Count occurrences of each mood
+    const moodCounts: Record<string, number> = {};
+    moodHistory.forEach(entry => {
+      moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
+    });
+    
+    // Find the most common mood
+    let dominantMood: MoodType = 'neutral';
+    let highestCount = 0;
+    
+    Object.entries(moodCounts).forEach(([mood, count]) => {
+      if (count > highestCount) {
+        highestCount = count;
+        dominantMood = mood as MoodType;
+      }
+    });
+    
+    // Generate insight based on dominant mood
+    switch (dominantMood) {
+      case 'happy':
+        return "You've been experiencing joy lately. What's bringing you happiness?";
+      case 'calm':
+        return "You've found some peace recently. What practices help you feel centered?";
+      case 'sad':
+        return "I notice you've been feeling down. Remember it's okay to not be okay.";
+      case 'anxious':
+        return "You've been feeling some anxiety. Take gentle care of yourself today.";
+      case 'angry':
+        return "I see you've felt frustrated recently. Your feelings are valid.";
+      default:
+        return "I notice your emotions have been varied. That's completely normal.";
+    }
+  };
+  
+  // Combine journal entries and mood history for a more complete picture
+  const combinedMoodEntries = [...moodHistory];
+  
+  // Add journal entries that aren't already represented in mood history
+  journalEntries.forEach(entry => {
+    const entryDate = new Date(entry.date);
+    // Only add if not already very close to an existing entry
+    if (!moodHistory.some(m => 
+      Math.abs(new Date(m.date).getTime() - entryDate.getTime()) < 60000 // within a minute
+    )) {
+      combinedMoodEntries.push({
+        date: entryDate,
+        mood: entry.mood
+      });
+    }
+  });
+  
+  // Sort by most recent first
+  combinedMoodEntries.sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  
+  const recentMoods = combinedMoodEntries.slice(0, 7); // Only show last 7 moods
   
   return (
-    <Card>
-      <CardHeader>
+    <Card className="rounded-xl overflow-hidden shadow-md">
+      <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50">
         <CardTitle className="text-xl">Mood Tracking</CardTitle>
       </CardHeader>
       <CardContent>
@@ -78,10 +137,10 @@ const MoodTracking = () => {
           </div>
         )}
         
-        {recentMoods.length > 0 && (
+        {getMoodInsight() && (
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <p className="text-sm text-gray-600">
-              These patterns help Mitra understand how to better support your emotional journey.
+            <p className="text-sm text-gray-600 italic">
+              {getMoodInsight()}
             </p>
           </div>
         )}

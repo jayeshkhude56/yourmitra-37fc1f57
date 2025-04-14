@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import SpeechProcessor from '@/services/SpeechProcessor';
 import { useMood } from '@/contexts/MoodContext';
-import { Frown, Heart, Smile, Meh } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
 interface MainContentProps {
   isSessionActive: boolean;
@@ -143,21 +143,6 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
     }
   };
   
-  // Get the mood icon based on current mood
-  const getMoodIcon = () => {
-    switch (currentMood) {
-      case 'calm':
-      case 'happy':
-        return <Smile className="h-10 w-10 absolute" />;
-      case 'sad':
-      case 'angry':
-        return <Frown className="h-10 w-10 absolute" />;
-      case 'anxious':
-      default:
-        return <Meh className="h-10 w-10 absolute" />;
-    }
-  };
-  
   // Get the breathing circle color based on mood
   const getMoodCircleColor = () => {
     switch (currentMood) {
@@ -186,7 +171,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   const showTears = isEmpathyMode && (currentMood === 'sad');
 
   return (
-    <div className={`flex flex-col items-center justify-center w-full max-w-3xl mx-auto p-6 rounded-lg transition-colors duration-500 ${getMoodBackground()}`}>
+    <div className={`flex flex-col items-center justify-center w-full max-w-3xl mx-auto p-6 rounded-xl shadow-sm transition-colors duration-500 ${getMoodBackground()}`}>
       <div className="flex flex-col items-center w-full">
         <div 
           onClick={userSpeaking ? handleStopListening : handleStartListening}
@@ -195,7 +180,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             ${getMoodCircleColor()}`}
         >
           <div className="absolute inset-0 flex items-center justify-center">
-            {getMoodIcon()}
+            {/* Removed emoji icons here */}
             
             {/* Animated tears for empathy mode */}
             {showTears && (
@@ -255,7 +240,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           
           {responseText && !interimText && (
             <div className="mt-4">
-              <h3 className="text-sm text-gray-400 mb-1">Assistant:</h3>
+              <h3 className="text-sm text-gray-400 mb-1">Mitra:</h3>
               <p className={`text-lg ${isMitraSpeaking ? getMoodTextColor() : ''}`}>{responseText}</p>
             </div>
           )}
@@ -273,16 +258,16 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           {!userSpeaking ? (
             <Button 
               onClick={handleStartListening}
-              className={`hover:bg-opacity-80 text-white px-6 py-4 h-auto rounded-full ${getMoodBackground()} ${getMoodTextColor()}`}
+              className={`hover:bg-opacity-80 text-white px-6 py-4 h-auto rounded-xl shadow-sm ${getMoodBackground()} ${getMoodTextColor()}`}
               disabled={isMitraSpeaking}
             >
-              Speak to Assistant
+              Speak to Mitra
             </Button>
           ) : (
             <Button 
               onClick={handleStopListening}
               variant="outline"
-              className={`border-blue-400 ${getMoodTextColor()} hover:bg-blue-50 px-6 py-4 h-auto rounded-full`}
+              className={`border-blue-400 ${getMoodTextColor()} hover:bg-blue-50 px-6 py-4 h-auto rounded-xl shadow-sm`}
             >
               Stop Speaking
             </Button>
@@ -291,7 +276,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           <Button 
             onClick={handleEndSession}
             variant="outline"
-            className="border-gray-400 text-gray-500 hover:bg-gray-50 px-6 py-4 h-auto rounded-full"
+            className="border-gray-400 text-gray-500 hover:bg-gray-50 px-6 py-4 h-auto rounded-xl shadow-sm"
           >
             End Session
           </Button>

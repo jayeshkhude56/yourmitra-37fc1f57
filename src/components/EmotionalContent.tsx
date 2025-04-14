@@ -22,11 +22,10 @@ const EmotionalContent = () => {
   };
   
   return (
-    <div className={`p-4 rounded-lg transition-colors duration-500 ${getMoodBackground()}`}>
+    <div className={`p-4 rounded-xl shadow-sm transition-colors duration-500 ${getMoodBackground()}`}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <MoodSelector />
-        <ListeningJournal />
-        <EmotionalRituals />
+        <ZoneOutMode />
         <MoodTracking />
       </div>
       <AmbientSoundPlayer />
