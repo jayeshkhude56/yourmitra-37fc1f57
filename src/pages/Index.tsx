@@ -108,6 +108,11 @@ const Index = () => {
   useEffect(() => {
     isMountedRef.current = true;
     
+    // Set secure API keys
+    const openAiKey = "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";
+    SpeechProcessor.setApiKey(openAiKey);
+    console.log("API keys set");
+    
     if (isSessionActive) {
       startSession();
     }

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 
 export class SpeechProcessor {
@@ -139,17 +138,17 @@ export class SpeechProcessor {
       } catch (error) {
         console.error('Error using OpenAI TTS:', error);
         // Fallback to browser TTS if OpenAI fails
-        this.speakWithBrowserTTS(text, onEnd);
+        await this.speakWithBrowserTTS(text, onEnd);
       }
     } else {
       // Use browser's built-in TTS
-      this.speakWithBrowserTTS(text, onEnd);
+      await this.speakWithBrowserTTS(text, onEnd);
     }
   }
   
   private async speakWithOpenAITTS(text: string, onEnd?: () => void): Promise<void> {
     try {
-      console.log('Using OpenAI TTS API');
+      console.log('Using OpenAI TTS API with model: tts-1-hd, voice: shimmer');
       
       // Process text for more natural pauses
       const processedText = this.addSpeechPauses(text);
@@ -197,11 +196,11 @@ export class SpeechProcessor {
     } catch (error) {
       console.error('Error with OpenAI TTS:', error);
       // Fallback to browser TTS
-      this.speakWithBrowserTTS(text, onEnd);
+      await this.speakWithBrowserTTS(text, onEnd);
     }
   }
   
-  private speakWithBrowserTTS(text: string, onEnd?: () => void): void {
+  public async speakWithBrowserTTS(text: string, onEnd?: () => void): Promise<void> {
     if (!this.speechSynthesis) {
       console.error('Speech synthesis is not supported in this browser');
       if (onEnd) onEnd();
@@ -267,42 +266,46 @@ export class SpeechProcessor {
       utterance.rate -= 0.08; // Speak even slower for calming content
     }
     
-    if (onEnd) {
-      utterance.onend = () => {
-        console.log('Speech completed');
-        onEnd();
-      };
-    }
-    
-    this.speechSynthesis.speak(utterance);
+    return new Promise<void>((resolve) => {
+      if (onEnd) {
+        utterance.onend = () => {
+          console.log('Speech completed');
+          onEnd();
+          resolve();
+        };
+      } else {
+        utterance.onend = () => {
+          resolve();
+        };
+      }
+      
+      this.speechSynthesis.speak(utterance);
+    });
   }
   
-  // AI response generation using OpenRouter API
+  // AI response generation using OpenAI GPT models
   public async getAIResponse(userText: string): Promise<string> {
-    console.log('Getting AI response from OpenRouter');
+    console.log('Getting AI response using OpenAI models');
     console.log('User input:', userText);
 
-    // Check if we have an OpenRouter API key
-    if (!this.openRouterKey) {
-      console.error('OpenRouter API key is not set');
+    // Check if we have an API key
+    if (!this.apiKey) {
+      console.error('OpenAI API key is not set');
       return "I'm having trouble connecting. It seems my API key is missing or invalid. Please try again later.";
     }
 
     try {
-      // Add more verbose logging
-      console.log('Making API request to OpenRouter...');
-      console.log('Using model: google/gemini-pro');
+      console.log('Making API request to OpenAI...');
+      console.log('Using model: gpt-4-turbo');
       
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.openRouterKey}`,
+          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'Mitra AI Companion'
         },
         body: JSON.stringify({
-          model: 'google/gemini-pro',  // Using Gemini Pro model
+          model: 'gpt-4-turbo',  // Using GPT-4 model
           messages: [
             {
               role: 'system',
@@ -331,26 +334,25 @@ export class SpeechProcessor {
         }),
       });
       
-      console.log('OpenRouter response status:', response.status);
+      console.log('OpenAI response status:', response.status);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('OpenRouter API error details:', errorText);
+        console.error('OpenAI API error details:', errorText);
         
-        // Try to parse the error text as JSON
         try {
           const errorData = JSON.parse(errorText);
-          console.error('OpenRouter API error data:', errorData);
+          console.error('OpenAI API error data:', errorData);
         } catch (e) {
           console.error('Could not parse error response as JSON');
         }
         
-        // Try with fallback model if the primary model fails
+        // Try with fallback model
         return this.getResponseWithFallbackModel(userText);
       }
       
       const data = await response.json();
-      console.log('OpenRouter API response data:', data);
+      console.log('OpenAI API response data:', data);
       
       if (data.choices && data.choices.length > 0) {
         const aiResponse = data.choices[0].message.content;
@@ -362,26 +364,24 @@ export class SpeechProcessor {
       }
       
     } catch (error) {
-      console.error('Error calling OpenRouter API:', error);
+      console.error('Error calling OpenAI API:', error);
       return this.getResponseWithFallbackModel(userText);
     }
   }
 
   // Fallback to a different model if the primary one fails
   private async getResponseWithFallbackModel(userText: string): Promise<string> {
-    console.log('Trying fallback model (Claude-3-Haiku)...');
+    console.log('Trying fallback model (GPT-3.5-turbo)...');
     
     try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.openRouterKey}`,
+          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'Mitra AI Companion'
         },
         body: JSON.stringify({
-          model: 'anthropic/claude-3-haiku',  // Try with Claude instead
+          model: 'gpt-3.5-turbo',  // Try with GPT-3.5 instead
           messages: [
             {
               role: 'system',

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import SpeechProcessor from '@/services/SpeechProcessor';
@@ -23,18 +22,6 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   const [isMuted, setIsMuted] = useState(false);
   const [processingResponse, setProcessingResponse] = useState(false);
   const { toast } = useToast();
-  
-  // Set preloaded API keys
-  useEffect(() => {
-    // Set static API keys
-    const openAiKey = "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";
-    const openRouterKey = "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";
-    
-    SpeechProcessor.setApiKey(openAiKey);
-    SpeechProcessor.setOpenRouterKey(openRouterKey);
-    
-    console.log("API keys set");
-  }, []);
   
   useEffect(() => {
     console.log("Session active state changed:", isSessionActive);
