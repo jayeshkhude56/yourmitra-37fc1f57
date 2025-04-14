@@ -5,6 +5,7 @@ export class SpeechProcessor {
   private recognition: SpeechRecognition | null = null;
   private speechSynthesis: SpeechSynthesis;
   private isListening: boolean = false;
+  private voiceGender: 'male' | 'female' = 'female';
   
   constructor() {
     // Check if browser supports Web Speech API
@@ -21,6 +22,11 @@ export class SpeechProcessor {
     }
     
     this.speechSynthesis = window.speechSynthesis;
+  }
+  
+  public setVoiceGender(gender: 'male' | 'female'): void {
+    this.voiceGender = gender;
+    console.log(`Voice gender set to: ${gender}`);
   }
   
   public startListening(onInterimResult: (text: string) => void, onFinalResult: (text: string) => void): void {
@@ -99,7 +105,7 @@ export class SpeechProcessor {
     
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Select the best female voice
+    // Select the best voice based on gender preference
     const voices = this.speechSynthesis.getVoices();
     let preferredVoice = null;
     
@@ -109,24 +115,33 @@ export class SpeechProcessor {
       console.log(`Voice ${index}: ${voice.name} (${voice.lang})`);
     });
     
-    // Look for best female voice
-    console.log('Looking for best female voice...');
-    preferredVoice = voices.find(voice => 
-      voice.name.includes('Samantha') ||
-      voice.name.includes('Victoria') ||
-      voice.name.includes('Female') ||
-      voice.name.includes('Karen') ||
-      voice.name.includes('Google UK English Female')
-    );
+    // Look for best female voice by default
+    console.log(`Looking for best ${this.voiceGender} voice...`);
+    if (this.voiceGender === 'female') {
+      preferredVoice = voices.find(voice => 
+        voice.name.includes('Samantha') ||
+        voice.name.includes('Victoria') ||
+        voice.name.includes('Female') ||
+        voice.name.includes('Karen') ||
+        voice.name.includes('Google UK English Female')
+      );
+    } else {
+      preferredVoice = voices.find(voice => 
+        voice.name.includes('Daniel') ||
+        voice.name.includes('David') ||
+        voice.name.includes('Alex') ||
+        voice.name.includes('Google UK English Male')
+      );
+    }
     
-    // If no female voice found, use any available voice
+    // If no preferred voice found, use any available voice
     if (!preferredVoice && voices.length > 0) {
       preferredVoice = voices[0];
     }
     
     // Use soft, gentle voice settings
     utterance.rate = 0.9;  // Slightly slower
-    utterance.pitch = 1.05; // Slightly higher pitch for female voice
+    utterance.pitch = this.voiceGender === 'female' ? 1.05 : 0.95; // Adjust pitch based on gender
     utterance.volume = 1.0; // Full volume
     
     if (preferredVoice) {

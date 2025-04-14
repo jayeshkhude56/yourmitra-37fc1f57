@@ -6,6 +6,7 @@ import EmotionalRituals from './EmotionalRituals';
 import MoodTracking from './MoodTracking';
 import AmbientSoundPlayer from './AmbientSoundPlayer';
 import { useMood } from '@/contexts/MoodContext';
+import ZoneOutMode from './ZoneOutMode';
 
 const EmotionalContent = () => {
   const { currentMood } = useMood();

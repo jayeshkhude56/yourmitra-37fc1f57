@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Smile, Frown, Meh } from 'lucide-react';
@@ -53,13 +52,11 @@ const MoodTracking = () => {
   const getMoodInsight = () => {
     if (moodHistory.length < 3) return null;
     
-    // Count occurrences of each mood
     const moodCounts: Record<string, number> = {};
     moodHistory.forEach(entry => {
       moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
     });
     
-    // Find the most common mood
     let dominantMood: MoodType = 'neutral';
     let highestCount = 0;
     
@@ -70,7 +67,6 @@ const MoodTracking = () => {
       }
     });
     
-    // Generate insight based on dominant mood
     switch (dominantMood) {
       case 'happy':
         return "You've been experiencing joy lately. What's bringing you happiness?";
@@ -87,15 +83,12 @@ const MoodTracking = () => {
     }
   };
   
-  // Combine journal entries and mood history for a more complete picture
   const combinedMoodEntries = [...moodHistory];
   
-  // Add journal entries that aren't already represented in mood history
   journalEntries.forEach(entry => {
     const entryDate = new Date(entry.date);
-    // Only add if not already very close to an existing entry
     if (!moodHistory.some(m => 
-      Math.abs(new Date(m.date).getTime() - entryDate.getTime()) < 60000 // within a minute
+      Math.abs(new Date(m.date).getTime() - entryDate.getTime()) < 60000
     )) {
       combinedMoodEntries.push({
         date: entryDate,
@@ -104,12 +97,11 @@ const MoodTracking = () => {
     }
   });
   
-  // Sort by most recent first
   combinedMoodEntries.sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
   
-  const recentMoods = combinedMoodEntries.slice(0, 7); // Only show last 7 moods
+  const recentMoods = combinedMoodEntries.slice(0, 7);
   
   return (
     <Card className="rounded-xl overflow-hidden shadow-md">
