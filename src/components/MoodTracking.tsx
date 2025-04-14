@@ -1,144 +1,213 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Smile, Frown, Meh } from 'lucide-react';
-import { useMood, MoodType } from '@/contexts/MoodContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Calendar } from '@/components/ui/calendar';
+import { useMood } from '@/contexts/MoodContext';
+import { Heart, Calendar as CalendarIcon } from 'lucide-react';
 
 const MoodTracking = () => {
-  const { moodHistory, journalEntries } = useMood();
-  
-  const getMoodIcon = (mood: MoodType) => {
-    switch (mood) {
-      case 'happy':
-      case 'calm':
-        return <Smile className="h-4 w-4 text-green-500" />;
-      case 'sad':
-      case 'anxious':
-      case 'angry':
-        return <Frown className="h-4 w-4 text-red-500" />;
-      default:
-        return <Meh className="h-4 w-4 text-gray-500" />;
-    }
-  };
-  
-  const getMoodColor = (mood: MoodType) => {
-    switch (mood) {
-      case 'happy':
-        return 'bg-orange-100 text-orange-700';
-      case 'calm':
-        return 'bg-blue-100 text-blue-700';
-      case 'sad':
-        return 'bg-gray-100 text-gray-700';
-      case 'anxious':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'angry':
-        return 'bg-red-100 text-red-700';
-      default:
-        return 'bg-purple-100 text-purple-700';
-    }
-  };
-  
-  const getRelativeTimeString = (date: Date): string => {
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-    
-    return date.toLocaleDateString();
-  };
-  
-  const getMoodInsight = () => {
-    if (moodHistory.length < 3) return null;
-    
-    const moodCounts: Record<string, number> = {};
-    moodHistory.forEach(entry => {
-      moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
-    });
-    
-    let dominantMood: MoodType = 'neutral';
-    let highestCount = 0;
-    
-    Object.entries(moodCounts).forEach(([mood, count]) => {
-      if (count > highestCount) {
-        highestCount = count;
-        dominantMood = mood as MoodType;
+  const { journalEntries, currentMood } = useMood();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [activeTab, setActiveTab] = useState("calendar");
+
+  // Get mood counts for the chart
+  const getMoodData = () => {
+    const moodCounts = {
+      happy: 0,
+      sad: 0,
+      angry: 0,
+    };
+
+    journalEntries.forEach(entry => {
+      if (entry.mood === 'happy' || entry.mood === 'sad' || entry.mood === 'angry') {
+        moodCounts[entry.mood as 'happy' | 'sad' | 'angry']++;
       }
     });
-    
-    switch (dominantMood) {
-      case 'happy':
-        return "You've been experiencing joy lately. What's bringing you happiness?";
-      case 'calm':
-        return "You've found some peace recently. What practices help you feel centered?";
-      case 'sad':
-        return "I notice you've been feeling down. Remember it's okay to not be okay.";
-      case 'anxious':
-        return "You've been feeling some anxiety. Take gentle care of yourself today.";
-      case 'angry':
-        return "I see you've felt frustrated recently. Your feelings are valid.";
-      default:
-        return "I notice your emotions have been varied. That's completely normal.";
-    }
+
+    return [
+      { name: 'Happy', count: moodCounts.happy, fill: '#FFB347' },
+      { name: 'Sad', count: moodCounts.sad, fill: '#A1A5B7' },
+      { name: 'Angry', count: moodCounts.angry, fill: '#FF6B6B' }
+    ];
   };
+
+  // Get journal entries for the selected date
+  const getEntriesForSelectedDate = () => {
+    if (!selectedDate) return [];
+    
+    return journalEntries.filter(entry => {
+      const entryDate = new Date(entry.date);
+      return (
+        entryDate.getDate() === selectedDate.getDate() &&
+        entryDate.getMonth() === selectedDate.getMonth() &&
+        entryDate.getFullYear() === selectedDate.getFullYear()
+      );
+    });
+  };
+
+  // Dates with entries for the calendar
+  const getDaysWithEntries = () => {
+    const datesWithEntries = new Set();
+    
+    journalEntries.forEach(entry => {
+      const date = new Date(entry.date);
+      const dateString = date.toISOString().split('T')[0];
+      datesWithEntries.add(dateString);
+    });
+    
+    return datesWithEntries;
+  };
+
+  const daysWithEntries = getDaysWithEntries();
   
-  const combinedMoodEntries = [...moodHistory];
-  
-  journalEntries.forEach(entry => {
-    const entryDate = new Date(entry.date);
-    if (!moodHistory.some(m => 
-      Math.abs(new Date(m.date).getTime() - entryDate.getTime()) < 60000
-    )) {
-      combinedMoodEntries.push({
-        date: entryDate,
-        mood: entry.mood
+  // Function to determine the CSS class for calendar days
+  const getDayClass = (date: Date) => {
+    const dateString = date.toISOString().split('T')[0];
+    if (daysWithEntries.has(dateString)) {
+      // We now only track three moods, so let's color based on these
+      const entriesForDay = journalEntries.filter(entry => {
+        const entryDate = new Date(entry.date);
+        return entryDate.toISOString().split('T')[0] === dateString;
       });
+      
+      // Find the predominant mood for the day
+      const moodCounts = { happy: 0, sad: 0, angry: 0 };
+      
+      entriesForDay.forEach(entry => {
+        if (entry.mood === 'happy') {
+          moodCounts.happy++;
+        } else if (entry.mood === 'sad') {
+          moodCounts.sad++;
+        } else if (entry.mood === 'angry') {
+          moodCounts.angry++;
+        }
+      });
+      
+      if (moodCounts.happy > moodCounts.sad && moodCounts.happy > moodCounts.angry) {
+        return 'bg-orange-100 text-orange-700';
+      } else if (moodCounts.sad > moodCounts.happy && moodCounts.sad > moodCounts.angry) {
+        return 'bg-gray-100 text-gray-700';
+      } else if (moodCounts.angry > moodCounts.happy && moodCounts.angry > moodCounts.sad) {
+        return 'bg-red-100 text-red-700';
+      } else {
+        return 'bg-blue-50 text-blue-700';
+      }
     }
-  });
-  
-  combinedMoodEntries.sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-  
-  const recentMoods = combinedMoodEntries.slice(0, 7);
-  
+    return '';
+  };
+
+  const selectedDateEntries = getEntriesForSelectedDate();
+  const moodData = getMoodData();
+
   return (
-    <Card className="rounded-xl overflow-hidden shadow-md">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50">
-        <CardTitle className="text-xl">Mood Tracking</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {recentMoods.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-6">
-            Your mood history will appear here as you share how you're feeling with Mitra.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {recentMoods.map((entry, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center">
-                  {getMoodIcon(entry.mood)}
-                  <span className={`ml-2 px-2 py-1 rounded-full text-xs ${getMoodColor(entry.mood)}`}>
-                    {entry.mood.charAt(0).toUpperCase() + entry.mood.slice(1)}
-                  </span>
-                </div>
-                <span className="text-xs text-gray-500">{getRelativeTimeString(new Date(entry.date))}</span>
-              </div>
-            ))}
-          </div>
-        )}
+    <div className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-2 mb-6">
+          <TabsTrigger value="calendar">Calendar View</TabsTrigger>
+          <TabsTrigger value="stats">Stats View</TabsTrigger>
+        </TabsList>
         
-        {getMoodInsight() && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <p className="text-sm text-gray-600 italic">
-              {getMoodInsight()}
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        <TabsContent value="calendar" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <CalendarIcon className="mr-2 h-5 w-5" />
+                Your Mood Calendar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="rounded-md border"
+                  modifiers={{
+                    withEntry: (date) => {
+                      const dateString = date.toISOString().split('T')[0];
+                      return daysWithEntries.has(dateString);
+                    }
+                  }}
+                  modifiersClassNames={{
+                    withEntry: getDayClass,
+                  }}
+                />
+              </div>
+              
+              {selectedDateEntries.length > 0 ? (
+                <div className="mt-6 space-y-4">
+                  <h3 className="font-medium text-lg">Journal Entries for {selectedDate?.toLocaleDateString()}</h3>
+                  {selectedDateEntries.map((entry) => (
+                    <Card key={entry.id} className="p-4 border-l-4 border-l-blue-400">
+                      <p className="text-gray-700">{entry.text}</p>
+                      <div className="flex items-center mt-2 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <Heart className={`h-4 w-4 mr-1 ${
+                            entry.mood === 'happy' ? 'text-orange-500' :
+                            entry.mood === 'sad' ? 'text-gray-500' :
+                            entry.mood === 'angry' ? 'text-red-500' : 'text-blue-500'
+                          }`} />
+                          <span className="capitalize">{entry.mood}</span>
+                        </div>
+                        <span className="mx-2">•</span>
+                        <span>{new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : selectedDate ? (
+                <div className="mt-6 text-center py-6 px-4 bg-gray-50 rounded-md">
+                  <p className="text-gray-500">No entries for {selectedDate.toLocaleDateString()}</p>
+                  <Button variant="outline" className="mt-4 rounded-full">
+                    Add Journal Entry
+                  </Button>
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="stats" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Mood Over Time</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={moodData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="count" name="Frequency" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              
+              <div className="mt-6 grid grid-cols-3 gap-4 text-center">
+                <div className="p-4 rounded-md bg-orange-50">
+                  <div className="text-xl font-semibold text-orange-600">{moodData[0].count}</div>
+                  <div className="text-sm text-gray-600">Happy Days</div>
+                </div>
+                
+                <div className="p-4 rounded-md bg-gray-50">
+                  <div className="text-xl font-semibold text-gray-600">{moodData[1].count}</div>
+                  <div className="text-sm text-gray-600">Sad Days</div>
+                </div>
+                
+                <div className="p-4 rounded-md bg-red-50">
+                  <div className="text-xl font-semibold text-red-600">{moodData[2].count}</div>
+                  <div className="text-sm text-gray-600">Angry Days</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

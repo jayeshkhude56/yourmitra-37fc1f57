@@ -6,6 +6,7 @@ export class SpeechProcessor {
   private speechSynthesis: SpeechSynthesis;
   private isListening: boolean = false;
   private voiceGender: 'male' | 'female' = 'female';
+  private apiKey: string = '';
   
   constructor() {
     // Check if browser supports Web Speech API
@@ -27,6 +28,11 @@ export class SpeechProcessor {
   public setVoiceGender(gender: 'male' | 'female'): void {
     this.voiceGender = gender;
     console.log(`Voice gender set to: ${gender}`);
+  }
+
+  public setApiKey(key: string): void {
+    this.apiKey = key;
+    console.log('API key has been set');
   }
   
   public startListening(onInterimResult: (text: string) => void, onFinalResult: (text: string) => void): void {
@@ -179,10 +185,73 @@ export class SpeechProcessor {
     this.speechSynthesis.speak(utterance);
   }
   
-  // AI response generation based on emotional intelligence
+  // AI response generation using OpenAI API
   public async getAIResponse(userText: string): Promise<string> {
-    console.log('Getting AI response');
+    console.log('Getting AI response from OpenAI');
     console.log('User input:', userText);
+
+    // If API key is not set, use local fallback responses
+    if (!this.apiKey) {
+      console.log('No API key set, using local fallback responses');
+      return this.getLocalFallbackResponse(userText);
+    }
+    
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: `You are Mitra, an AI companion designed to provide empathetic, warm and supportive responses. 
+              Keep your responses concise (1-3 sentences max) and conversational. 
+              Express emotions naturally through your words. 
+              Focus on being present for the user rather than solving problems. 
+              When the user shares feelings, acknowledge them before offering perspectives.
+              The more the user talks to you, the more you should tailor your responses to their emotional needs.`
+            },
+            {
+              role: 'user',
+              content: userText
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 150
+        }),
+      });
+      
+      if (!response.ok) {
+        console.error('OpenAI API error:', response.status, response.statusText);
+        // Fallback to local responses if API call fails
+        return this.getLocalFallbackResponse(userText);
+      }
+      
+      const data = await response.json();
+      console.log('OpenAI API response:', data);
+      
+      if (data.choices && data.choices.length > 0) {
+        const aiResponse = data.choices[0].message.content;
+        console.log('Generated AI response:', aiResponse);
+        return aiResponse;
+      } else {
+        console.error('Unexpected API response format:', data);
+        return this.getLocalFallbackResponse(userText);
+      }
+      
+    } catch (error) {
+      console.error('Error calling OpenAI API:', error);
+      return this.getLocalFallbackResponse(userText);
+    }
+  }
+
+  // Local fallback response generation when API is not available
+  private getLocalFallbackResponse(userText: string): string {
+    console.log('Using local fallback response generation');
     
     // Detect emotional tone in user's text
     const emotionKeywords = {
@@ -331,7 +400,7 @@ export class SpeechProcessor {
     
     // Select a response
     const response = responses[Math.floor(Math.random() * responses.length)];
-    console.log('Generated AI response:', response);
+    console.log('Generated local AI response:', response);
     
     return response;
   }

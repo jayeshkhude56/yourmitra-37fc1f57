@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import SpeechProcessor from '@/services/SpeechProcessor';
-import { useMood } from '@/contexts/MoodContext';
-import { Heart } from 'lucide-react';
+import { Home } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface MainContentProps {
   isSessionActive: boolean;
@@ -18,8 +19,9 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   const [responseText, setResponseText] = useState("");
   const [isMitraSpeaking, setIsMitraSpeaking] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
-  
-  const { currentMood, isEmpathyMode } = useMood();
+  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [apiKeySet, setApiKeySet] = useState(false);
+  const { toast } = useToast();
   
   useEffect(() => {
     console.log("Session active state changed:", isSessionActive);
@@ -29,6 +31,13 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       setUserText("");
       setResponseText("");
       setVoiceError(null);
+      
+      // Check for stored API key in localStorage
+      const storedApiKey = localStorage.getItem('mitra-openai-key');
+      if (storedApiKey) {
+        SpeechProcessor.setApiKey(storedApiKey);
+        setApiKeySet(true);
+      }
     } else {
       setIsBreathing(false);
       setUserSpeaking(false);
@@ -39,6 +48,20 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
     }
   }, [isSessionActive]);
   
+  const handleSaveApiKey = useCallback(() => {
+    if (apiKeyInput.trim()) {
+      localStorage.setItem('mitra-openai-key', apiKeyInput);
+      SpeechProcessor.setApiKey(apiKeyInput);
+      setApiKeySet(true);
+      toast({
+        title: "API Key Saved",
+        description: "Your OpenAI API key has been saved and is ready to use",
+        duration: 3000,
+      });
+      setApiKeyInput("");
+    }
+  }, [apiKeyInput, toast]);
+
   const handleStartListening = () => {
     console.log("Starting to listen for user speech");
     setUserSpeaking(true);
@@ -70,22 +93,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           
           console.log("Getting AI response for text:", text);
           try {
-            let response;
-            
-            // Generate empathetic responses in empathy mode
-            if (isEmpathyMode) {
-              const empathyResponses = [
-                "I'm right here with you. It's okay to feel this way.",
-                "Sometimes we just need space to feel our emotions. I'm here.",
-                "It's okay to cry. I'm listening without judgment.",
-                "You're not alone in this moment. I'm here with you.",
-                "Take all the time you need. There's no rush to feel better."
-              ];
-              response = empathyResponses[Math.floor(Math.random() * empathyResponses.length)];
-            } else {
-              response = await SpeechProcessor.getAIResponse(text);
-            }
-            
+            const response = await SpeechProcessor.getAIResponse(text);
             console.log("Received AI response:", response);
             
             setResponseText(response);
@@ -130,56 +138,20 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
     console.log("Session ended");
   };
 
-  // Get background color based on current mood
-  const getMoodBackground = () => {
-    switch (currentMood) {
-      case 'happy': return 'bg-orange-50';
-      case 'sad': return 'bg-gray-50';
-      case 'angry': return 'bg-red-50';
-      default: return 'bg-purple-50';
-    }
-  };
-  
-  // Get the breathing circle color based on mood
-  const getMoodCircleColor = () => {
-    switch (currentMood) {
-      case 'happy': return 'bg-orange-200';
-      case 'sad': return 'bg-gray-200';
-      case 'angry': return 'bg-red-200';
-      default: return 'bg-purple-200';
-    }
-  };
-  
-  // Get the text color based on mood
-  const getMoodTextColor = () => {
-    switch (currentMood) {
-      case 'happy': return 'text-orange-700';
-      case 'sad': return 'text-gray-700';
-      case 'angry': return 'text-red-700';
-      default: return 'text-purple-700';
-    }
-  };
-  
-  // Show animated tears in empathy mode for sad mood
-  const showTears = isEmpathyMode && (currentMood === 'sad');
-
   return (
-    <div className={`flex flex-col items-center justify-center w-full max-w-3xl mx-auto p-6 rounded-xl shadow-sm transition-colors duration-500 ${getMoodBackground()}`}>
+    <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto p-6 rounded-xl shadow-sm transition-colors duration-500 bg-gradient-to-br from-blue-50 to-white">
       <div className="flex flex-col items-center w-full">
         <div 
           onClick={userSpeaking ? handleStopListening : handleStartListening}
           className={`w-40 h-40 rounded-full flex items-center justify-center mb-6 cursor-pointer relative
             ${(userSpeaking || isMitraSpeaking) ? 'animate-pulse' : 'breathing-circle'} 
-            ${getMoodCircleColor()}`}
+            bg-blue-200`}
         >
           <div className="absolute inset-0 flex items-center justify-center">
-            {/* Animated tears for empathy mode */}
-            {showTears && (
-              <div className="absolute top-14 left-14">
-                <div className="tear-drop animate-fall-1"></div>
-                <div className="tear-drop animate-fall-2 delay-300"></div>
-              </div>
-            )}
+            {/* Logo in the center of breathing circle */}
+            <div className="text-3xl font-bold text-blue-600">
+              M
+            </div>
           </div>
         </div>
 
@@ -190,7 +162,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
                 {Array.from({ length: 12 }).map((_, i) => (
                   <div 
                     key={i}
-                    className={`${getMoodTextColor()} w-1 rounded-full`}
+                    className="text-blue-600 w-1 rounded-full"
                     style={{
                       height: `${Math.random() * 24 + (userSpeaking || isMitraSpeaking ? 8 : 4)}px`,
                       animationDelay: `${i * 0.05}s`,
@@ -232,24 +204,49 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           {responseText && !interimText && (
             <div className="mt-4">
               <h3 className="text-sm text-gray-400 mb-1">Mitra:</h3>
-              <p className={`text-lg ${isMitraSpeaking ? getMoodTextColor() : ''}`}>{responseText}</p>
+              <p className={`text-lg ${isMitraSpeaking ? 'text-blue-600' : ''}`}>{responseText}</p>
             </div>
           )}
           
-          {/* Show a special message in empathy mode when silent */}
-          {isEmpathyMode && !userSpeaking && !isMitraSpeaking && !interimText && !userText && (
+          {/* Show welcome message when nothing else is showing */}
+          {!userSpeaking && !isMitraSpeaking && !interimText && !userText && !responseText && (
             <div className="mt-4 italic text-gray-600">
-              <p>I'm here with you in this moment. ❤️</p>
-              <p className="text-sm mt-2">Sometimes just being together is enough.</p>
+              <p>Hi there! I'm Mitra, your AI companion. How are you feeling today?</p>
+              <p className="text-sm mt-2">Click on the circle to start speaking with me.</p>
             </div>
           )}
         </div>
+
+        {!apiKeySet && (
+          <div className="w-full max-w-md mb-6 p-4 bg-blue-50 rounded-xl">
+            <h3 className="text-sm font-medium mb-2">Connect to OpenAI (Optional)</h3>
+            <p className="text-xs text-gray-600 mb-2">
+              For more advanced conversations, add your OpenAI API key. Your key is stored locally and never shared.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="password"
+                value={apiKeyInput}
+                onChange={(e) => setApiKeyInput(e.target.value)}
+                placeholder="Enter your OpenAI API key"
+                className="flex-1 px-3 py-2 text-sm border rounded"
+              />
+              <Button 
+                onClick={handleSaveApiKey}
+                size="sm"
+                className="rounded-lg"
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-4">
           {!userSpeaking ? (
             <Button 
               onClick={handleStartListening}
-              className={`hover:bg-opacity-80 text-white px-6 py-4 h-auto rounded-xl shadow-sm ${getMoodBackground()} ${getMoodTextColor()}`}
+              className="hover:bg-opacity-80 text-white px-6 py-4 h-auto rounded-xl shadow-sm bg-blue-500"
               disabled={isMitraSpeaking}
             >
               Speak to Mitra
@@ -258,7 +255,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             <Button 
               onClick={handleStopListening}
               variant="outline"
-              className={`border-blue-400 ${getMoodTextColor()} hover:bg-blue-50 px-6 py-4 h-auto rounded-xl shadow-sm`}
+              className="border-blue-400 text-blue-600 hover:bg-blue-50 px-6 py-4 h-auto rounded-xl shadow-sm"
             >
               Stop Speaking
             </Button>
@@ -272,13 +269,6 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             End Session
           </Button>
         </div>
-        
-        {/* Add special Heart icon for empathy mode */}
-        {isEmpathyMode && (
-          <div className="mt-4">
-            <Heart className="h-5 w-5 text-red-400" fill="rgba(248, 113, 113, 0.5)" />
-          </div>
-        )}
       </div>
     </div>
   );

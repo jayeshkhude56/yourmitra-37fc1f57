@@ -1,9 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home } from 'lucide-react';
-import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';
 import MainContent from '@/components/MainContent';
 import SpeechProcessor from '@/services/SpeechProcessor';
 import { MoodProvider } from '@/contexts/MoodContext';
@@ -19,13 +18,8 @@ interface Conversation {
 }
 
 const Index = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSessionActive, setIsSessionActive] = useState(true);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
 
   const startSession = () => {
     const newConversation = {
@@ -117,39 +111,34 @@ const Index = () => {
 
   return (
     <MoodProvider>
-      <div className="min-h-screen flex bg-gradient-to-br from-blue-50 to-white">
-        {/* Sidebar */}
-        <Sidebar 
-          isOpen={isSidebarOpen} 
-          toggleSidebar={toggleSidebar}
-        />
-        
-        {/* Main content */}
-        <div className="flex-1 flex flex-col">
-          <div className="py-4 px-6 flex justify-between items-center">
-            <Link to="/">
-              <Button variant="ghost" className="rounded-full">
-                <Home className="h-5 w-5 mr-2" /> Home
-              </Button>
-            </Link>
-            
-            <h1 className="text-2xl font-semibold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-              Talk to Mitra
-            </h1>
-            
-            <div className="w-20"></div> {/* Spacer for alignment */}
-          </div>
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-white">
+        <header className="py-4 px-6 flex justify-between items-center shadow-sm bg-white/80 backdrop-blur-md">
+          <Link to="/">
+            <Button variant="ghost" className="rounded-full">
+              <Home className="h-5 w-5 mr-2" /> Home
+            </Button>
+          </Link>
           
-          <main className="flex-1 flex flex-col">
-            <div className="flex items-center justify-center py-6 px-4">
-              <MainContent 
-                isSessionActive={isSessionActive}
-                startSession={startSession}
-                endSession={endSession}
-              />
-            </div>
-          </main>
-        </div>
+          <h1 className="text-2xl font-semibold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+            Talk to Mitra
+          </h1>
+          
+          <div className="w-20"></div> {/* Spacer for alignment */}
+        </header>
+        
+        <main className="flex-1 flex flex-col">
+          <div className="flex items-center justify-center py-6 px-4">
+            <MainContent 
+              isSessionActive={isSessionActive}
+              startSession={startSession}
+              endSession={endSession}
+            />
+          </div>
+        </main>
+
+        <footer className="py-6 text-center text-gray-500 text-sm border-t border-gray-100">
+          <p>© 2025 Mitra AI Companion</p>
+        </footer>
       </div>
     </MoodProvider>
   );
