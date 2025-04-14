@@ -11,7 +11,7 @@ const ZoneOutPage = () => {
     <MoodProvider>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
         <header className="py-4 px-6 flex justify-between items-center">
-          <Link to="/landing">
+          <Link to="/">
             <Button variant="ghost" className="rounded-full">
               <Home className="h-5 w-5 mr-2" /> Home
             </Button>
@@ -33,7 +33,7 @@ const ZoneOutPage = () => {
             <ZoneOutMode />
             
             <div className="mt-8 text-center">
-              <Link to="/">
+              <Link to="/talk">
                 <Button className="rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white">
                   Talk to Mitra
                 </Button>

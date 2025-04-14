@@ -80,7 +80,7 @@ const Landing = () => {
             </p>
             
             <div className="space-y-4 md:space-y-0 md:space-x-4 flex flex-col md:flex-row justify-center">
-              <Link to="/">
+              <Link to="/talk">
                 <Button className="rounded-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-6 h-auto text-lg">
                   Talk to Mitra
                 </Button>
@@ -101,7 +101,7 @@ const Landing = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Feature 1: Talk Card */}
-            <Link to="/" className="group">
+            <Link to="/talk" className="group">
               <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col">
                 <div className="bg-white/60 w-12 h-12 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <MessageSquare className="h-6 w-6 text-orange-600" />
@@ -130,6 +130,17 @@ const Landing = () => {
                 </div>
                 <h3 className="text-xl font-medium mb-2 text-gray-800">Zone Out Mode</h3>
                 <p className="text-gray-600 flex-grow">Relax with soothing visuals and ambient sounds when you just need some space to be.</p>
+              </div>
+            </Link>
+            
+            {/* New Feature: Mood Tracking Card */}
+            <Link to="/mood-tracking" className="group">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col">
+                <div className="bg-white/60 w-12 h-12 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-green-600"><path d="M12 2v4"></path><path d="M12 18v4"></path><path d="m4.93 4.93 2.83 2.83"></path><path d="m16.24 16.24 2.83 2.83"></path><path d="M2 12h4"></path><path d="M18 12h4"></path><path d="m4.93 19.07 2.83-2.83"></path><path d="m16.24 7.76 2.83-2.83"></path></svg>
+                </div>
+                <h3 className="text-xl font-medium mb-2 text-gray-800">Mood Tracking</h3>
+                <p className="text-gray-600 flex-grow">Track your emotional patterns over time and gain insights into your wellbeing journey.</p>
               </div>
             </Link>
           </div>

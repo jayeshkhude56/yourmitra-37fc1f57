@@ -3,10 +3,8 @@ import React from 'react';
 import MoodSelector from './MoodSelector';
 import ListeningJournal from './ListeningJournal';
 import EmotionalRituals from './EmotionalRituals';
-import MoodTracking from './MoodTracking';
 import AmbientSoundPlayer from './AmbientSoundPlayer';
 import { useMood } from '@/contexts/MoodContext';
-import ZoneOutMode from './ZoneOutMode';
 
 const EmotionalContent = () => {
   const { currentMood } = useMood();
@@ -24,8 +22,6 @@ const EmotionalContent = () => {
     <div className={`p-4 rounded-xl shadow-sm transition-colors duration-500 ${getMoodBackground()}`}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <MoodSelector />
-        <ZoneOutMode />
-        <MoodTracking />
       </div>
       <AmbientSoundPlayer />
     </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import SpeechProcessor from '@/services/SpeechProcessor';
@@ -134,10 +133,8 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   // Get background color based on current mood
   const getMoodBackground = () => {
     switch (currentMood) {
-      case 'calm': return 'bg-blue-50';
       case 'happy': return 'bg-orange-50';
       case 'sad': return 'bg-gray-50';
-      case 'anxious': return 'bg-yellow-50';
       case 'angry': return 'bg-red-50';
       default: return 'bg-purple-50';
     }
@@ -146,10 +143,8 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   // Get the breathing circle color based on mood
   const getMoodCircleColor = () => {
     switch (currentMood) {
-      case 'calm': return 'bg-blue-200';
       case 'happy': return 'bg-orange-200';
       case 'sad': return 'bg-gray-200';
-      case 'anxious': return 'bg-yellow-200';
       case 'angry': return 'bg-red-200';
       default: return 'bg-purple-200';
     }
@@ -158,10 +153,8 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   // Get the text color based on mood
   const getMoodTextColor = () => {
     switch (currentMood) {
-      case 'calm': return 'text-blue-700';
       case 'happy': return 'text-orange-700';
       case 'sad': return 'text-gray-700';
-      case 'anxious': return 'text-yellow-700';
       case 'angry': return 'text-red-700';
       default: return 'text-purple-700';
     }
@@ -180,8 +173,6 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             ${getMoodCircleColor()}`}
         >
           <div className="absolute inset-0 flex items-center justify-center">
-            {/* Removed emoji icons here */}
-            
             {/* Animated tears for empathy mode */}
             {showTears && (
               <div className="absolute top-14 left-14">
