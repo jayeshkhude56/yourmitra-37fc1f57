@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 
 export class SpeechProcessor {
@@ -288,6 +289,10 @@ export class SpeechProcessor {
     }
 
     try {
+      // Add more verbose logging
+      console.log('Making API request to OpenRouter...');
+      console.log('Using model: google/gemini-pro');
+      
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -297,7 +302,7 @@ export class SpeechProcessor {
           'X-Title': 'Mitra AI Companion'
         },
         body: JSON.stringify({
-          model: 'google/gemini-pro',  // You can change this to different supported models
+          model: 'google/gemini-pro',  // Using Gemini Pro model
           messages: [
             {
               role: 'system',
@@ -326,14 +331,26 @@ export class SpeechProcessor {
         }),
       });
       
+      console.log('OpenRouter response status:', response.status);
+      
       if (!response.ok) {
-        console.error('OpenRouter API error:', response.status, response.statusText);
-        // Fallback to local responses if API call fails
-        return this.getLocalFallbackResponse(userText);
+        const errorText = await response.text();
+        console.error('OpenRouter API error details:', errorText);
+        
+        // Try to parse the error text as JSON
+        try {
+          const errorData = JSON.parse(errorText);
+          console.error('OpenRouter API error data:', errorData);
+        } catch (e) {
+          console.error('Could not parse error response as JSON');
+        }
+        
+        // Try with fallback model if the primary model fails
+        return this.getResponseWithFallbackModel(userText);
       }
       
       const data = await response.json();
-      console.log('OpenRouter API response:', data);
+      console.log('OpenRouter API response data:', data);
       
       if (data.choices && data.choices.length > 0) {
         const aiResponse = data.choices[0].message.content;
@@ -341,11 +358,59 @@ export class SpeechProcessor {
         return aiResponse;
       } else {
         console.error('Unexpected API response format:', data);
-        return this.getLocalFallbackResponse(userText);
+        return this.getResponseWithFallbackModel(userText);
       }
       
     } catch (error) {
       console.error('Error calling OpenRouter API:', error);
+      return this.getResponseWithFallbackModel(userText);
+    }
+  }
+
+  // Fallback to a different model if the primary one fails
+  private async getResponseWithFallbackModel(userText: string): Promise<string> {
+    console.log('Trying fallback model (Claude-3-Haiku)...');
+    
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.openRouterKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Mitra AI Companion'
+        },
+        body: JSON.stringify({
+          model: 'anthropic/claude-3-haiku',  // Try with Claude instead
+          messages: [
+            {
+              role: 'system',
+              content: `You are Mitra, a compassionate AI companion. Keep responses very brief (1-2 sentences), warm and empathetic.`
+            },
+            {
+              role: 'user',
+              content: userText
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 100,
+        }),
+      });
+      
+      if (!response.ok) {
+        console.error('Fallback model also failed:', response.status);
+        return this.getLocalFallbackResponse(userText);
+      }
+      
+      const data = await response.json();
+      
+      if (data.choices && data.choices.length > 0) {
+        return data.choices[0].message.content;
+      } else {
+        return this.getLocalFallbackResponse(userText);
+      }
+    } catch (error) {
+      console.error('Error with fallback model:', error);
       return this.getLocalFallbackResponse(userText);
     }
   }

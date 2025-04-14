@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home } from 'lucide-react';
@@ -20,8 +20,11 @@ interface Conversation {
 const Index = () => {
   const [isSessionActive, setIsSessionActive] = useState(true);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
+  const isMountedRef = useRef(true);
 
   const startSession = () => {
+    if (!isMountedRef.current) return;
+    
     const newConversation = {
       id: generateId(),
       timestamp: new Date(),
@@ -35,48 +38,56 @@ const Index = () => {
     // Listen for speech events to record conversation
     const originalGetAIResponse = SpeechProcessor.getAIResponse;
     SpeechProcessor.getAIResponse = async (text: string) => {
-      const response = await originalGetAIResponse(text);
-      
-      // Update current conversation with the new exchange
-      setCurrentConversation(prev => {
-        if (prev) {
-          const updatedConversation = {
-            ...prev,
-            snippets: [...prev.snippets, `You: ${text}`, `Mitra: ${response}`]
-          };
-          
-          // If this is the first exchange, try to generate a topic
-          if (prev.snippets.length === 0) {
-            updatedConversation.topic = text.length > 30 
-              ? text.substring(0, 30) + "..." 
-              : text;
-          }
-          
-          // Save to localStorage
-          const savedConversations = localStorage.getItem('mitra-conversations');
-          let conversations = savedConversations 
-            ? JSON.parse(savedConversations) 
-            : [];
-          
-          // Find if this conversation already exists in storage
-          const existingIndex = conversations.findIndex((c: any) => c.id === prev.id);
-          
-          if (existingIndex >= 0) {
-            conversations[existingIndex] = updatedConversation;
-          } else {
-            conversations.unshift(updatedConversation);
-          }
-          
-          // Limit to last 10 conversations
-          conversations = conversations.slice(0, 10);
-          
-          localStorage.setItem('mitra-conversations', JSON.stringify(conversations));
-          return updatedConversation;
+      try {
+        const response = await originalGetAIResponse(text);
+        
+        // Only update state if component is still mounted
+        if (isMountedRef.current) {
+          // Update current conversation with the new exchange
+          setCurrentConversation(prev => {
+            if (prev) {
+              const updatedConversation = {
+                ...prev,
+                snippets: [...prev.snippets, `You: ${text}`, `Mitra: ${response}`]
+              };
+              
+              // If this is the first exchange, try to generate a topic
+              if (prev.snippets.length === 0) {
+                updatedConversation.topic = text.length > 30 
+                  ? text.substring(0, 30) + "..." 
+                  : text;
+              }
+              
+              // Save to localStorage
+              const savedConversations = localStorage.getItem('mitra-conversations');
+              let conversations = savedConversations 
+                ? JSON.parse(savedConversations) 
+                : [];
+              
+              // Find if this conversation already exists in storage
+              const existingIndex = conversations.findIndex((c: any) => c.id === prev.id);
+              
+              if (existingIndex >= 0) {
+                conversations[existingIndex] = updatedConversation;
+              } else {
+                conversations.unshift(updatedConversation);
+              }
+              
+              // Limit to last 10 conversations
+              conversations = conversations.slice(0, 10);
+              
+              localStorage.setItem('mitra-conversations', JSON.stringify(conversations));
+              return updatedConversation;
+            }
+            return prev;
+          });
         }
-        return prev;
-      });
-      
-      return response;
+        
+        return response;
+      } catch (error) {
+        console.error("Error in getAIResponse:", error);
+        throw error; // Rethrow to handle in the calling component
+      }
     };
   };
 
@@ -95,17 +106,25 @@ const Index = () => {
   
   // Start a session automatically when component mounts
   useEffect(() => {
+    isMountedRef.current = true;
+    
     if (isSessionActive) {
       startSession();
     }
     
     // Clean up function to handle component unmount
     return () => {
+      isMountedRef.current = false;
+      
       // Make sure any speech or recognition is stopped
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
       SpeechProcessor.stopListening();
+      
+      // Reset the getAIResponse method to its original implementation
+      const originalGetAIResponse = SpeechProcessor.getAIResponse.bind(SpeechProcessor);
+      SpeechProcessor.getAIResponse = originalGetAIResponse;
     };
   }, []);
 
