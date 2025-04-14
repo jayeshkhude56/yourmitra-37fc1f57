@@ -2,9 +2,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import SpeechProcessor from '@/services/SpeechProcessor';
-import { Volume2, VolumeX, Mic } from 'lucide-react';
+import { Volume2, VolumeX, Mic, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface MainContentProps {
   isSessionActive: boolean;
@@ -21,7 +30,9 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   const [isMitraSpeaking, setIsMitraSpeaking] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string>("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");
+  const [openRouterKey, setOpenRouterKey] = useState<string>(localStorage.getItem('openRouterKey') || "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");
   const [isMuted, setIsMuted] = useState(false);
+  const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -33,9 +44,14 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       setResponseText("");
       setVoiceError(null);
       
-      // Set OpenAI API key
+      // Set OpenAI API key for TTS
       if (apiKey) {
         SpeechProcessor.setApiKey(apiKey);
+      }
+      
+      // Set OpenRouter API key for AI responses
+      if (openRouterKey) {
+        SpeechProcessor.setOpenRouterKey(openRouterKey);
       }
       
       // Set TTS state based on mute setting
@@ -48,7 +64,25 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       setResponseText("");
       setVoiceError(null);
     }
-  }, [isSessionActive, apiKey, isMuted]);
+  }, [isSessionActive, apiKey, openRouterKey, isMuted]);
+
+  const handleApiKeySubmit = () => {
+    // Update API keys in the SpeechProcessor
+    SpeechProcessor.setApiKey(apiKey);
+    SpeechProcessor.setOpenRouterKey(openRouterKey);
+    
+    // Save OpenRouter key to localStorage
+    localStorage.setItem('openRouterKey', openRouterKey);
+    
+    // Close dialog
+    setIsApiKeyDialogOpen(false);
+    
+    // Show confirmation
+    toast({
+      title: "API Keys Updated",
+      description: "Your API keys have been securely saved.",
+    });
+  };
   
   const handleStartListening = () => {
     console.log("Starting to listen for user speech");
@@ -164,6 +198,16 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           >
             {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
           </Button>
+          
+          {/* API settings button */}
+          <Button
+            onClick={() => setIsApiKeyDialogOpen(true)}
+            variant="outline"
+            size="icon"
+            className="absolute -bottom-2 -left-2 rounded-full w-10 h-10 bg-white border-blue-200 hover:bg-blue-50"
+          >
+            <Lock size={16} />
+          </Button>
         </div>
 
         {!voiceError ? (
@@ -256,6 +300,42 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           </Button>
         </div>
       </div>
+      
+      {/* API Keys Dialog */}
+      <Dialog open={isApiKeyDialogOpen} onOpenChange={setIsApiKeyDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>API Settings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="openai-key">OpenAI API Key (for TTS)</Label>
+              <Input
+                id="openai-key"
+                type="password" 
+                placeholder="sk-..." 
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+              <p className="text-xs text-gray-500">Required for voice responses</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="openrouter-key">OpenRouter API Key (for AI responses)</Label>
+              <Input
+                id="openrouter-key"
+                type="password" 
+                placeholder="sk-or-..." 
+                value={openRouterKey}
+                onChange={(e) => setOpenRouterKey(e.target.value)}
+              />
+              <p className="text-xs text-gray-500">Required for AI responses</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleApiKeySubmit} type="submit">Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 
 export class SpeechProcessor {
@@ -7,6 +6,7 @@ export class SpeechProcessor {
   private isListening: boolean = false;
   private voiceGender: 'male' | 'female' = 'female';
   private apiKey: string = '';
+  private openRouterKey: string = '';
   private useTTS: boolean = true; // Flag to enable/disable TTS
   
   constructor() {
@@ -24,6 +24,12 @@ export class SpeechProcessor {
     }
     
     this.speechSynthesis = window.speechSynthesis;
+    
+    // Initialize with stored OpenRouter key if available
+    const storedOpenRouterKey = localStorage.getItem('openRouterKey');
+    if (storedOpenRouterKey) {
+      this.openRouterKey = storedOpenRouterKey;
+    }
   }
   
   public setVoiceGender(gender: 'male' | 'female'): void {
@@ -33,7 +39,14 @@ export class SpeechProcessor {
 
   public setApiKey(key: string): void {
     this.apiKey = key;
-    console.log('API key has been set');
+    console.log('OpenAI API key has been set');
+  }
+  
+  public setOpenRouterKey(key: string): void {
+    this.openRouterKey = key;
+    // Save the OpenRouter key to localStorage for persistence
+    localStorage.setItem('openRouterKey', key);
+    console.log('OpenRouter API key has been set');
   }
   
   public setUseTTS(useTTS: boolean): void {
@@ -271,20 +284,28 @@ export class SpeechProcessor {
     this.speechSynthesis.speak(utterance);
   }
   
-  // AI response generation using OpenAI API
+  // AI response generation using OpenRouter API
   public async getAIResponse(userText: string): Promise<string> {
-    console.log('Getting AI response from OpenAI');
+    console.log('Getting AI response from OpenRouter');
     console.log('User input:', userText);
 
+    // Check if we have an OpenRouter API key
+    if (!this.openRouterKey) {
+      console.error('OpenRouter API key is not set');
+      return "I'm having trouble connecting. It seems my API key is missing or invalid. Could you please check the settings?";
+    }
+
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          'Authorization': `Bearer ${this.openRouterKey}`,
           'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Mitra AI Companion'
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: 'google/gemini-pro',  // You can change this to different supported models
           messages: [
             {
               role: 'system',
@@ -310,19 +331,17 @@ export class SpeechProcessor {
           ],
           temperature: 0.8,
           max_tokens: 150,
-          presence_penalty: 0.5, // Encourages more varied responses
-          frequency_penalty: 0.3, // Reduces repetition
         }),
       });
       
       if (!response.ok) {
-        console.error('OpenAI API error:', response.status, response.statusText);
+        console.error('OpenRouter API error:', response.status, response.statusText);
         // Fallback to local responses if API call fails
         return this.getLocalFallbackResponse(userText);
       }
       
       const data = await response.json();
-      console.log('OpenAI API response:', data);
+      console.log('OpenRouter API response:', data);
       
       if (data.choices && data.choices.length > 0) {
         const aiResponse = data.choices[0].message.content;
@@ -334,7 +353,7 @@ export class SpeechProcessor {
       }
       
     } catch (error) {
-      console.error('Error calling OpenAI API:', error);
+      console.error('Error calling OpenRouter API:', error);
       return this.getLocalFallbackResponse(userText);
     }
   }
