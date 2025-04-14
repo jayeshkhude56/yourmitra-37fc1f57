@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import SpeechProcessor from '@/services/SpeechProcessor';
 import { Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 interface MainContentProps {
   isSessionActive: boolean;
@@ -19,8 +20,6 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   const [responseText, setResponseText] = useState("");
   const [isMitraSpeaking, setIsMitraSpeaking] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
-  const [apiKeyInput, setApiKeyInput] = useState("");
-  const [apiKeySet, setApiKeySet] = useState(false);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -32,12 +31,9 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       setResponseText("");
       setVoiceError(null);
       
-      // Check for stored API key in localStorage
-      const storedApiKey = localStorage.getItem('mitra-openai-key');
-      if (storedApiKey) {
-        SpeechProcessor.setApiKey(storedApiKey);
-        setApiKeySet(true);
-      }
+      // Set OpenAI API key
+      const apiKey = "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";
+      SpeechProcessor.setApiKey(apiKey);
     } else {
       setIsBreathing(false);
       setUserSpeaking(false);
@@ -48,20 +44,6 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
     }
   }, [isSessionActive]);
   
-  const handleSaveApiKey = useCallback(() => {
-    if (apiKeyInput.trim()) {
-      localStorage.setItem('mitra-openai-key', apiKeyInput);
-      SpeechProcessor.setApiKey(apiKeyInput);
-      setApiKeySet(true);
-      toast({
-        title: "API Key Saved",
-        description: "Your OpenAI API key has been saved and is ready to use",
-        duration: 3000,
-      });
-      setApiKeyInput("");
-    }
-  }, [apiKeyInput, toast]);
-
   const handleStartListening = () => {
     console.log("Starting to listen for user speech");
     setUserSpeaking(true);
@@ -147,12 +129,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             ${(userSpeaking || isMitraSpeaking) ? 'animate-pulse' : 'breathing-circle'} 
             bg-blue-200`}
         >
-          <div className="absolute inset-0 flex items-center justify-center">
-            {/* Logo in the center of breathing circle */}
-            <div className="text-3xl font-bold text-blue-600">
-              M
-            </div>
-          </div>
+          {/* Empty breathing circle, no M */}
         </div>
 
         {!voiceError ? (
@@ -216,31 +193,6 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             </div>
           )}
         </div>
-
-        {!apiKeySet && (
-          <div className="w-full max-w-md mb-6 p-4 bg-blue-50 rounded-xl">
-            <h3 className="text-sm font-medium mb-2">Connect to OpenAI (Optional)</h3>
-            <p className="text-xs text-gray-600 mb-2">
-              For more advanced conversations, add your OpenAI API key. Your key is stored locally and never shared.
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="password"
-                value={apiKeyInput}
-                onChange={(e) => setApiKeyInput(e.target.value)}
-                placeholder="Enter your OpenAI API key"
-                className="flex-1 px-3 py-2 text-sm border rounded"
-              />
-              <Button 
-                onClick={handleSaveApiKey}
-                size="sm"
-                className="rounded-lg"
-              >
-                Save
-              </Button>
-            </div>
-          </div>
-        )}
 
         <div className="flex gap-4">
           {!userSpeaking ? (

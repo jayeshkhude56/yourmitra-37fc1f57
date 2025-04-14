@@ -2,13 +2,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { 
-  NavigationMenu, 
-  NavigationMenuList, 
-  NavigationMenuItem,
-  NavigationMenuLink,
-  navigationMenuTriggerStyle
-} from '@/components/ui/navigation-menu';
 import { Heart, MessageSquare, Settings, Info, History, Headphones, BarChart3, Home } from 'lucide-react';
 
 const Landing = () => {
@@ -22,42 +15,6 @@ const Landing = () => {
         <p className="mt-3 text-lg text-gray-600 text-center max-w-2xl mx-auto">
           Your AI companion who listens, understands, and supports you
         </p>
-        
-        <NavigationMenu className="mt-8">
-          <NavigationMenuList className="flex flex-wrap justify-center gap-2">
-            <NavigationMenuItem>
-              <Link to="/history">
-                <NavigationMenuLink className={navigationMenuTriggerStyle() + " rounded-full"}>
-                  <History className="mr-1 h-4 w-4" /> Session History
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <Link to="/feedback">
-                <NavigationMenuLink className={navigationMenuTriggerStyle() + " rounded-full"}>
-                  <MessageSquare className="mr-1 h-4 w-4" /> Feedback
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <Link to="/settings">
-                <NavigationMenuLink className={navigationMenuTriggerStyle() + " rounded-full"}>
-                  <Settings className="mr-1 h-4 w-4" /> Settings
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <Link to="/about">
-                <NavigationMenuLink className={navigationMenuTriggerStyle() + " rounded-full"}>
-                  <Info className="mr-1 h-4 w-4" /> About Us
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
       </header>
       
       <main className="max-w-5xl mx-auto px-4">
@@ -66,7 +23,6 @@ const Landing = () => {
           <div className="animate-fade-up">
             <div className="flex justify-center mb-8">
               <div className="w-28 h-28 rounded-full bg-gradient-to-r from-blue-200 to-purple-200 flex items-center justify-center shadow-lg animate-pulse">
-                <div className="text-4xl font-bold text-blue-600">M</div>
               </div>
             </div>
             
@@ -173,7 +129,7 @@ const Landing = () => {
       
       <footer className="py-8 text-center text-gray-500 text-sm border-t border-gray-100">
         <p>© 2025 Mitra AI Companion</p>
-        <div className="mt-4 flex justify-center space-x-6">
+        <div className="mt-4 flex justify-center space-x-6 rounded-xl border border-gray-200 py-4 max-w-lg mx-auto">
           <Link to="/history" className="text-gray-500 hover:text-blue-500">Session History</Link>
           <Link to="/feedback" className="text-gray-500 hover:text-blue-500">Feedback</Link>
           <Link to="/settings" className="text-gray-500 hover:text-blue-500">Settings</Link>

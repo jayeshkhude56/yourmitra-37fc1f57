@@ -56,8 +56,8 @@ const App = () => {
               <Route path="/feedback" element={<Feedback />} />
               <Route path="/about" element={<About />} />
               <Route path="/history" element={<History />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
+              {/* Redirect any other path to landing page */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>

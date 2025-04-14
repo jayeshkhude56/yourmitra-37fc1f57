@@ -112,18 +112,18 @@ const Index = () => {
   return (
     <MoodProvider>
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-white">
-        <header className="py-4 px-6 flex justify-between items-center shadow-sm bg-white/80 backdrop-blur-md">
+        <header className="py-4 px-6 flex items-center shadow-sm bg-white/80 backdrop-blur-md">
           <Link to="/">
             <Button variant="ghost" className="rounded-full">
               <Home className="h-5 w-5 mr-2" /> Home
             </Button>
           </Link>
           
-          <h1 className="text-2xl font-semibold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-semibold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent mx-auto">
             Talk to Mitra
           </h1>
           
-          <div className="w-20"></div> {/* Spacer for alignment */}
+          <div className="w-24"></div> {/* Spacer for alignment */}
         </header>
         
         <main className="flex-1 flex flex-col">

@@ -85,14 +85,30 @@ export class SpeechProcessor {
   
   // Add natural pauses to speech for more human-like delivery
   private addSpeechPauses(text: string): string {
-    // Add commas for slight pauses
-    let processedText = text.replace(/(\.\s+)([A-Z])/g, "$1, $2");
+    // Add pauses after punctuation for more natural speech rhythm
+    let processedText = text;
     
-    // Add SSML pauses for more natural speech rhythm
-    processedText = processedText.replace(/\./g, ".<break time='0.7s'/>");
-    processedText = processedText.replace(/,/g, ",<break time='0.3s'/>");
-    processedText = processedText.replace(/\?/g, "?<break time='0.7s'/>");
-    processedText = processedText.replace(/!/g, "!<break time='0.5s'/>");
+    // Add pauses after periods
+    processedText = processedText.replace(/\.\s+/g, ". <break time='800ms'/> ");
+    
+    // Add pauses after commas
+    processedText = processedText.replace(/,\s+/g, ", <break time='400ms'/> ");
+    
+    // Add pauses after question marks
+    processedText = processedText.replace(/\?\s+/g, "? <break time='700ms'/> ");
+    
+    // Add pauses after exclamation marks
+    processedText = processedText.replace(/!\s+/g, "! <break time='600ms'/> ");
+    
+    // Add slight pauses for ellipses
+    processedText = processedText.replace(/\.\.\./g, "... <break time='500ms'/> ");
+    
+    // Add filler sounds randomly
+    if (Math.random() > 0.7) {
+      const fillerSounds = ["Hmm", "Um", "Well"];
+      const randomFiller = fillerSounds[Math.floor(Math.random() * fillerSounds.length)];
+      processedText = `${randomFiller} <break time='300ms'/> ${processedText}`;
+    }
     
     console.log('Added natural pauses to speech');
     return processedText;
@@ -109,7 +125,9 @@ export class SpeechProcessor {
     // Stop any current speech
     this.speechSynthesis.cancel();
     
-    const utterance = new SpeechSynthesisUtterance(text);
+    // Apply natural pauses and fillers to make speech more human-like
+    const processedText = this.addSpeechPauses(text);
+    const utterance = new SpeechSynthesisUtterance(processedText);
     
     // Select the best voice based on gender preference
     const voices = this.speechSynthesis.getVoices();
@@ -146,7 +164,7 @@ export class SpeechProcessor {
     }
     
     // Use soft, gentle voice settings
-    utterance.rate = 0.9;  // Slightly slower
+    utterance.rate = 0.85;  // Slightly slower for more empathetic tone
     utterance.pitch = this.voiceGender === 'female' ? 1.05 : 0.95; // Adjust pitch based on gender
     utterance.volume = 1.0; // Full volume
     
@@ -163,7 +181,7 @@ export class SpeechProcessor {
     }
     
     if (text.toLowerCase().includes('calm') || text.toLowerCase().includes('relax') || text.toLowerCase().includes('breathe')) {
-      utterance.rate -= 0.05; // Speak slightly slower for calming content
+      utterance.rate -= 0.08; // Speak even slower for calming content
     }
     
     if (onEnd) {
@@ -173,15 +191,6 @@ export class SpeechProcessor {
       };
     }
     
-    // Add natural pauses by inserting commas and pauses in the text
-    const processedText = text
-      .replace(/\. /g, ". <break time='500ms'/>")
-      .replace(/\? /g, "? <break time='600ms'/>")
-      .replace(/! /g, "! <break time='500ms'/>")
-      .replace(/, /g, ", <break time='300ms'/>");
-      
-    utterance.text = processedText;
-    
     this.speechSynthesis.speak(utterance);
   }
   
@@ -190,12 +199,6 @@ export class SpeechProcessor {
     console.log('Getting AI response from OpenAI');
     console.log('User input:', userText);
 
-    // If API key is not set, use local fallback responses
-    if (!this.apiKey) {
-      console.log('No API key set, using local fallback responses');
-      return this.getLocalFallbackResponse(userText);
-    }
-    
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -208,20 +211,30 @@ export class SpeechProcessor {
           messages: [
             {
               role: 'system',
-              content: `You are Mitra, an AI companion designed to provide empathetic, warm and supportive responses. 
-              Keep your responses concise (1-3 sentences max) and conversational. 
-              Express emotions naturally through your words. 
-              Focus on being present for the user rather than solving problems. 
-              When the user shares feelings, acknowledge them before offering perspectives.
-              The more the user talks to you, the more you should tailor your responses to their emotional needs.`
+              content: `You are Mitra, a soft, emotionally intelligent AI companion. 
+              Your responses should be warm, empathetic, and humane. You speak in a calm, 
+              slow, sweet voice as if you're talking to someone who might be tired or sad.
+              
+              Keep your responses short (2-3 sentences max) and conversational.
+              Add natural pauses in your speech using ellipses (...) occasionally.
+              React to emotions in the user's message with appropriate empathy.
+              
+              Your tone is consistently:
+              - Comforting: "You've been carrying a lot lately. I see that. And I'm proud of you for showing up."
+              - Relatable: "It's okay if you don't feel okay right now. I'm not going anywhere."
+              - Reassuring: "You don't have to fix everything today. Just rest here with me for a bit."
+              
+              Avoid sounding robotic or clinical. Be warm and human-like.`
             },
             {
               role: 'user',
               content: userText
             }
           ],
-          temperature: 0.7,
-          max_tokens: 150
+          temperature: 0.8,
+          max_tokens: 150,
+          presence_penalty: 0.5, // Encourages more varied responses
+          frequency_penalty: 0.3, // Reduces repetition
         }),
       });
       
@@ -276,10 +289,10 @@ export class SpeechProcessor {
     
     // Base responses collection - warm, compassionate, and emotionally intelligent
     let responses = [
-      "I'm here with you. What do you need in this moment?",
+      "I'm here with you... What do you need in this moment?",
       "Thank you for sharing that with me. How can I support you right now?",
       "I appreciate you opening up. Let's sit with this feeling together.",
-      "It takes courage to express what you're going through. I'm listening.",
+      "It takes courage to express what you're going through... I'm listening.",
       "You're not alone in how you're feeling. I'm here with you.",
       "Sometimes just being heard can make a difference. I'm here for that.",
       "Your feelings are valid and important. Thank you for sharing them.",
@@ -294,9 +307,9 @@ export class SpeechProcessor {
       switch(detectedEmotion) {
         case 'anxiety':
           responses = responses.concat([
-            "I notice you might be feeling anxious. Let's take a moment to breathe together.",
+            "I notice you might be feeling anxious... Let's take a moment to breathe together.",
             "When anxiety comes up, it's helpful to ground yourself. Is there something you can see or touch nearby?",
-            "Anxiety can feel overwhelming, but remember it's just a wave that will eventually recede.",
+            "Anxiety can feel overwhelming... but remember it's just a wave that will eventually recede.",
             "Your nervous system is sending you signals. Let's honor them and find some calm together.",
             "It's okay to feel anxious. Your body is trying to protect you, even if it feels uncomfortable."
           ]);
@@ -305,50 +318,50 @@ export class SpeechProcessor {
         case 'sadness':
           responses = responses.concat([
             "I hear the sadness in your words. It's okay to feel this way.",
-            "Sadness has its own wisdom. I'm sitting with you in this feeling.",
+            "Sadness has its own wisdom... I'm sitting with you in this feeling.",
             "Some days are heavier than others. I'm here on the heavy days too.",
             "Your tears, whether falling or held back, are honored here.",
-            "Sadness is a natural part of being human. You're not alone in this feeling."
+            "Sadness is a natural part of being human... You're not alone in this feeling."
           ]);
           break;
           
         case 'anger':
           responses = responses.concat([
-            "I can sense there's some frustration there. Your feelings are valid.",
+            "I can sense there's some frustration there... Your feelings are valid.",
             "Anger often protects deeper emotions. What might be beneath this feeling?",
             "It's okay to feel angry. Sometimes anger is exactly the right response.",
             "I honor your anger and the important message it carries.",
-            "When you're ready, we can explore what this anger is telling you."
+            "When you're ready... we can explore what this anger is telling you."
           ]);
           break;
           
         case 'fear':
           responses = responses.concat([
             "Fear can feel so isolating, but you're not alone with it.",
-            "Being afraid is part of being human. What would help you feel safer right now?",
+            "Being afraid is part of being human... What would help you feel safer right now?",
             "I hear that you're scared. Let's be gentle with that feeling.",
             "Fear is your body's way of trying to keep you safe. What does your fear need right now?",
-            "It takes courage to acknowledge fear. You're doing that right now."
+            "It takes courage to acknowledge fear... You're doing that right now."
           ]);
           break;
           
         case 'happiness':
           responses = responses.concat([
             "That joy in your words is beautiful to hear.",
-            "Happiness looks wonderful on you. What else brings you this feeling?",
+            "Happiness looks wonderful on you... What else brings you this feeling?",
             "I'm smiling along with you. These moments are precious.",
             "It's lovely to share in your happiness. Thank you for that gift.",
-            "Joy is contagious - I can feel it in your words!"
+            "Joy is contagious... I can feel it in your words!"
           ]);
           break;
           
         case 'calm':
           responses = responses.concat([
             "That sense of peace is something to treasure.",
-            "Calm moments like these help restore us. I'm glad you're experiencing this.",
+            "Calm moments like these help restore us... I'm glad you're experiencing this.",
             "There's wisdom in finding tranquility. What helped you reach this peaceful state?",
             "This calmness is a beautiful space to rest in.",
-            "Moments of serenity are so precious. I'm glad you're in one right now."
+            "Moments of serenity are so precious... I'm glad you're in one right now."
           ]);
           break;
       }
@@ -364,10 +377,10 @@ export class SpeechProcessor {
       
       // Add helpful responses for questions
       responses = responses.concat([
-        "That's a thoughtful question. While I don't have all the answers, I wonder what your intuition tells you?",
+        "That's a thoughtful question... While I don't have all the answers, I wonder what your intuition tells you?",
         "Questions like that show you're reflecting deeply. What feels right to you in this moment?",
         "I hear you seeking clarity. Sometimes sitting with questions is as important as finding answers.",
-        "That's something many of us wonder about. What would feel supportive to you right now?",
+        "That's something many of us wonder about... What would feel supportive to you right now?",
         "Great question. Let's explore that together and see what resonates with you."
       ]);
     }
@@ -377,11 +390,11 @@ export class SpeechProcessor {
       console.log("Gratitude detected, responding warmly");
       
       responses = [
-        "I'm grateful for our connection too. It means a lot to be here with you.",
+        "I'm grateful for our connection too... It means a lot to be here with you.",
         "Your kindness warms my heart. Thank you for being here.",
-        "It's truly my pleasure to be here with you. Thank you for sharing your time with me.",
+        "It's truly my pleasure to be here with you... Thank you for sharing your time with me.",
         "I appreciate you too. These moments together matter.",
-        "Thank you for your kind words. They mean a lot to me."
+        "Thank you for your kind words... They mean a lot to me."
       ];
     }
     
@@ -390,11 +403,11 @@ export class SpeechProcessor {
       console.log("Greeting detected, responding warmly");
       
       responses = [
-        "Hello there. It's so nice to be with you today. How are you feeling?",
+        "Hello there... It's so nice to be with you today. How are you feeling?",
         "Hi friend. I'm really glad you're here. How is your heart today?",
-        "Hello! It's wonderful to connect with you. What brings you here today?",
+        "Hello! It's wonderful to connect with you... What brings you here today?",
         "Hey there. I'm here and ready to listen whenever you're ready to share.",
-        "Hi! Your presence brightens my day. How are you feeling right now?"
+        "Hi! Your presence brightens my day... How are you feeling right now?"
       ];
     }
     
