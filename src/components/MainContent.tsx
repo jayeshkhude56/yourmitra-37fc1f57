@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import SpeechProcessor from '@/services/SpeechProcessor';
-import { Home } from 'lucide-react';
+import { Volume2, VolumeX, Mic } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 
@@ -20,6 +20,8 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   const [responseText, setResponseText] = useState("");
   const [isMitraSpeaking, setIsMitraSpeaking] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<string>("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");
+  const [isMuted, setIsMuted] = useState(false);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -32,8 +34,12 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       setVoiceError(null);
       
       // Set OpenAI API key
-      const apiKey = "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";
-      SpeechProcessor.setApiKey(apiKey);
+      if (apiKey) {
+        SpeechProcessor.setApiKey(apiKey);
+      }
+      
+      // Set TTS state based on mute setting
+      SpeechProcessor.setUseTTS(!isMuted);
     } else {
       setIsBreathing(false);
       setUserSpeaking(false);
@@ -42,7 +48,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       setResponseText("");
       setVoiceError(null);
     }
-  }, [isSessionActive]);
+  }, [isSessionActive, apiKey, isMuted]);
   
   const handleStartListening = () => {
     console.log("Starting to listen for user speech");
@@ -82,13 +88,14 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             
             console.log("Speaking AI response");
             setIsMitraSpeaking(true);
-            SpeechProcessor.speak(response, () => {
+            await SpeechProcessor.speak(response, () => {
               console.log("AI finished speaking");
               setIsMitraSpeaking(false);
             });
           } catch (error) {
             console.error("Error getting or speaking AI response:", error);
             setVoiceError("Sorry, I had trouble processing that. Could you please try again?");
+            setIsMitraSpeaking(false);
           }
         } else {
           console.log("Empty speech detected");
@@ -120,16 +127,43 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
     console.log("Session ended");
   };
 
+  const toggleMute = () => {
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    SpeechProcessor.setUseTTS(!newMutedState);
+    toast({
+      title: newMutedState ? "Voice responses muted" : "Voice responses enabled",
+      description: newMutedState 
+        ? "Mitra will respond with text only." 
+        : "Mitra will respond with voice and text.",
+    });
+  };
+
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto p-6 rounded-xl shadow-sm transition-colors duration-500 bg-gradient-to-br from-blue-50 to-white">
       <div className="flex flex-col items-center w-full">
-        <div 
-          onClick={userSpeaking ? handleStopListening : handleStartListening}
-          className={`w-40 h-40 rounded-full flex items-center justify-center mb-6 cursor-pointer relative
-            ${(userSpeaking || isMitraSpeaking) ? 'animate-pulse' : 'breathing-circle'} 
-            bg-blue-200`}
-        >
-          {/* Empty breathing circle, no M */}
+        <div className="relative">
+          <div 
+            onClick={userSpeaking ? handleStopListening : handleStartListening}
+            className={`w-40 h-40 rounded-full flex items-center justify-center mb-6 cursor-pointer relative
+              ${(userSpeaking || isMitraSpeaking) ? 'animate-pulse' : 'breathing-circle'} 
+              bg-blue-200`}
+          >
+            {/* Empty breathing circle */}
+            {isMitraSpeaking && (
+              <div className="absolute inset-0 rounded-full bg-blue-300 opacity-20 animate-ping"></div>
+            )}
+          </div>
+          
+          {/* Mute/unmute button */}
+          <Button
+            onClick={toggleMute}
+            variant="outline"
+            size="icon"
+            className="absolute -bottom-2 -right-2 rounded-full w-10 h-10 bg-white border-blue-200 hover:bg-blue-50"
+          >
+            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </Button>
         </div>
 
         {!voiceError ? (

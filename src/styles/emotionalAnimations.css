@@ -32,6 +32,51 @@
   }
 }
 
+/* Enhanced breathing with emotional glow for speech */
+@keyframes emotional-breathe {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+    box-shadow: 0 0 15px rgba(100, 149, 237, 0.3);
+  }
+  25% {
+    transform: scale(1.05);
+    opacity: 1;
+    box-shadow: 0 0 30px rgba(100, 149, 237, 0.6);
+  }
+  50% {
+    transform: scale(0.98);
+    opacity: 0.9;
+    box-shadow: 0 0 20px rgba(100, 149, 237, 0.4);
+  }
+  75% {
+    transform: scale(1.03);
+    opacity: 1;
+    box-shadow: 0 0 30px rgba(100, 149, 237, 0.6);
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.8;
+    box-shadow: 0 0 15px rgba(100, 149, 237, 0.3);
+  }
+}
+
+/* Animation for emotional heartbeat while speaking */
+@keyframes emotional-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.1;
+  }
+}
+
 /* Wave animation for zone out mode */
 @keyframes wave {
   0% {
@@ -78,4 +123,14 @@
   100% {
     transform: translateY(0) translateX(0);
   }
+}
+
+/* Speaking animation */
+.speaking-animation {
+  animation: emotional-breathe 3s infinite ease-in-out;
+}
+
+/* Ping animation for speech indicator */
+.animate-ping {
+  animation: emotional-pulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }

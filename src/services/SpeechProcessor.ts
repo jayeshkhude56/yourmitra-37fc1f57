@@ -7,6 +7,7 @@ export class SpeechProcessor {
   private isListening: boolean = false;
   private voiceGender: 'male' | 'female' = 'female';
   private apiKey: string = '';
+  private useTTS: boolean = true; // Flag to enable/disable TTS
   
   constructor() {
     // Check if browser supports Web Speech API
@@ -33,6 +34,11 @@ export class SpeechProcessor {
   public setApiKey(key: string): void {
     this.apiKey = key;
     console.log('API key has been set');
+  }
+  
+  public setUseTTS(useTTS: boolean): void {
+    this.useTTS = useTTS;
+    console.log(`Text-to-speech ${useTTS ? 'enabled' : 'disabled'}`);
   }
   
   public startListening(onInterimResult: (text: string) => void, onFinalResult: (text: string) => void): void {
@@ -114,16 +120,87 @@ export class SpeechProcessor {
     return processedText;
   }
   
-  public speak(text: string, onEnd?: () => void): void {
-    if (!this.speechSynthesis) {
-      console.error('Speech synthesis is not supported in this browser');
-      return;
-    }
-    
+  public async speak(text: string, onEnd?: () => void): Promise<void> {
     console.log(`Speaking: "${text}"`);
     
     // Stop any current speech
     this.speechSynthesis.cancel();
+    
+    if (this.useTTS && this.apiKey) {
+      try {
+        // Use OpenAI TTS API
+        await this.speakWithOpenAITTS(text, onEnd);
+      } catch (error) {
+        console.error('Error using OpenAI TTS:', error);
+        // Fallback to browser TTS if OpenAI fails
+        this.speakWithBrowserTTS(text, onEnd);
+      }
+    } else {
+      // Use browser's built-in TTS
+      this.speakWithBrowserTTS(text, onEnd);
+    }
+  }
+  
+  private async speakWithOpenAITTS(text: string, onEnd?: () => void): Promise<void> {
+    try {
+      console.log('Using OpenAI TTS API');
+      
+      // Process text for more natural pauses
+      const processedText = this.addSpeechPauses(text);
+      
+      const response = await fetch('https://api.openai.com/v1/audio/speech', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'tts-1-hd',
+          voice: 'shimmer',
+          input: processedText,
+          speed: 0.85, // Slower, more comforting pace
+          response_format: 'mp3',
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('OpenAI TTS API error:', response.status, response.statusText, errorData);
+        throw new Error(`OpenAI TTS API error: ${response.status}`);
+      }
+      
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      audio.onended = () => {
+        console.log('TTS Audio playback completed');
+        URL.revokeObjectURL(audioUrl);
+        if (onEnd) onEnd();
+      };
+      
+      audio.onerror = (err) => {
+        console.error('TTS Audio playback error:', err);
+        URL.revokeObjectURL(audioUrl);
+        if (onEnd) onEnd();
+      };
+      
+      await audio.play();
+      console.log('TTS Audio playback started');
+      
+    } catch (error) {
+      console.error('Error with OpenAI TTS:', error);
+      // Fallback to browser TTS
+      this.speakWithBrowserTTS(text, onEnd);
+    }
+  }
+  
+  private speakWithBrowserTTS(text: string, onEnd?: () => void): void {
+    if (!this.speechSynthesis) {
+      console.error('Speech synthesis is not supported in this browser');
+      if (onEnd) onEnd();
+      return;
+    }
     
     // Apply natural pauses and fillers to make speech more human-like
     const processedText = this.addSpeechPauses(text);

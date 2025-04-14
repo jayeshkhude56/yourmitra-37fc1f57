@@ -17,6 +17,11 @@ import About from "./pages/About";
 import History from "./pages/History";
 import { MoodProvider } from "@/contexts/MoodContext";
 
+// Import calendar styles
+import 'react-calendar/dist/Calendar.css';
+// Import our emotional animation styles
+import './styles/emotionalAnimations.css';
+
 const queryClient = new QueryClient();
 
 const App = () => {
