@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import SpeechProcessor from '@/services/SpeechProcessor';
-import { Volume2, VolumeX, Mic } from 'lucide-react';
+import { Volume2, VolumeX, Mic, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 
@@ -21,6 +22,8 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [processingResponse, setProcessingResponse] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'reconnecting' | 'error'>('connected');
+  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -31,6 +34,8 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       setUserText("");
       setResponseText("");
       setVoiceError(null);
+      setConnectionStatus('connected');
+      setRetryCount(0);
       
       // Set TTS state based on mute setting
       SpeechProcessor.setUseTTS(!isMuted);
@@ -41,6 +46,8 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       setUserText("");
       setResponseText("");
       setVoiceError(null);
+      setConnectionStatus('connected');
+      setRetryCount(0);
     }
   }, [isSessionActive, isMuted]);
 
@@ -73,6 +80,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           setInterimText("");
           setVoiceError(null);
           setProcessingResponse(true);
+          setConnectionStatus('connected');
           
           console.log("Getting AI response for text:", text);
           try {
@@ -81,6 +89,16 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             
             if (!response || response.trim().length === 0) {
               throw new Error("Received empty response from AI");
+            }
+            
+            // Check if response contains connection error message
+            if (response.includes("trouble connecting") || 
+                response.includes("having trouble") ||
+                response.includes("connection issues")) {
+              setConnectionStatus('error');
+              setRetryCount(prev => prev + 1);
+            } else {
+              setConnectionStatus('connected');
             }
             
             setResponseText(response);
@@ -97,10 +115,19 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             setVoiceError("Sorry, I had trouble processing that. Could you please try again?");
             setProcessingResponse(false);
             setIsMitraSpeaking(false);
+            setConnectionStatus('error');
+            setRetryCount(prev => prev + 1);
             
             // Try once more with local fallback
             try {
-              const fallbackResponse = "I seem to be having trouble connecting right now. Let's try again in a moment. How are you feeling today?";
+              let fallbackResponse;
+              
+              if (retryCount > 2) {
+                fallbackResponse = "I'm having persistent trouble connecting to my systems. Let's try a different approach. How about you tell me more about how you're feeling today?";
+              } else {
+                fallbackResponse = "I seem to be having trouble connecting right now. Let's try again in a moment. How are you feeling today?";
+              }
+              
               setResponseText(fallbackResponse);
               
               if (!isMuted) {
@@ -162,6 +189,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
     
     setVoiceError(null);
     setProcessingResponse(true);
+    setConnectionStatus('reconnecting');
     
     try {
       const response = await SpeechProcessor.getAIResponse(userText);
@@ -169,6 +197,17 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       
       if (!response || response.trim().length === 0) {
         throw new Error("Received empty response from retry");
+      }
+      
+      // Check if response contains connection error message
+      if (response.includes("trouble connecting") || 
+          response.includes("having trouble") || 
+          response.includes("connection issues")) {
+        setConnectionStatus('error');
+        setRetryCount(prev => prev + 1);
+      } else {
+        setConnectionStatus('connected');
+        setRetryCount(0);
       }
       
       setResponseText(response);
@@ -184,7 +223,84 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       console.error("Error in retry:", error);
       setVoiceError("I'm still having trouble connecting. Please check your internet connection and try again shortly.");
       setProcessingResponse(false);
+      setConnectionStatus('error');
+      setRetryCount(prev => prev + 1);
     }
+  };
+
+  // Get the style for the main circle based on current state
+  const getCircleStyle = () => {
+    if (processingResponse) {
+      return 'bg-purple-200';
+    } else if (connectionStatus === 'error') {
+      return 'bg-amber-100';
+    } else if (isMitraSpeaking) {
+      return 'bg-blue-200 animate-pulse';
+    } else if (userSpeaking) {
+      return 'bg-green-200 animate-pulse';
+    } else {
+      return 'bg-blue-200 breathing-circle';
+    }
+  };
+
+  // Function to show appropriate emotional indicators
+  const renderEmotionalIndicator = () => {
+    if (voiceError) {
+      return (
+        <div className="h-8 mb-4 text-red-500 text-sm flex items-center">
+          <span>{voiceError}</span>
+          {userText && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="ml-2 text-xs text-blue-500 hover:text-blue-700 p-1 h-auto"
+              onClick={handleRetryResponse}
+              disabled={processingResponse}
+            >
+              <RefreshCw size={14} className="mr-1" /> Retry
+            </Button>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="h-8 mb-4 flex items-center">
+        {(userSpeaking || isMitraSpeaking || interimText || processingResponse) ? (
+          <div className="flex items-center justify-center space-x-1 h-8">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div 
+                key={i}
+                className={`${
+                  connectionStatus === 'error' 
+                    ? 'bg-amber-400' 
+                    : connectionStatus === 'reconnecting' 
+                    ? 'bg-purple-400' 
+                    : 'bg-blue-600'
+                } w-1 rounded-full`}
+                style={{
+                  height: `${Math.random() * 24 + (userSpeaking || isMitraSpeaking || processingResponse ? 8 : 4)}px`,
+                  animationDelay: `${i * 0.05}s`,
+                  animation: 'pulse 0.6s infinite'
+                }}
+              ></div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center space-x-1 h-8">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div 
+                key={i}
+                className="bg-gray-300 w-1 rounded-full"
+                style={{
+                  height: `${4 + (i % 3) * 2}px`
+                }}
+              ></div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -193,17 +309,25 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
         <div className="relative">
           <div 
             onClick={userSpeaking ? handleStopListening : handleStartListening}
-            className={`w-40 h-40 rounded-full flex items-center justify-center mb-6 cursor-pointer relative
-              ${(userSpeaking || isMitraSpeaking) ? 'animate-pulse' : 'breathing-circle'} 
-              ${processingResponse ? 'bg-purple-200' : 'bg-blue-200'}`}
+            className={`w-40 h-40 rounded-full flex items-center justify-center mb-6 cursor-pointer relative ${getCircleStyle()}`}
           >
             {(isMitraSpeaking || processingResponse) && (
-              <div className="absolute inset-0 rounded-full bg-blue-300 opacity-20 animate-ping"></div>
+              <div className={`absolute inset-0 rounded-full ${
+                connectionStatus === 'error' ? 'bg-amber-200' : 'bg-blue-300'
+              } opacity-20 animate-ping`}></div>
             )}
             
             {processingResponse && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${
+                  connectionStatus === 'error' ? 'border-amber-500' : 'border-blue-500'
+                }`}></div>
+              </div>
+            )}
+            
+            {connectionStatus === 'error' && !processingResponse && (
+              <div className="absolute inset-0 flex items-center justify-center opacity-50">
+                <RefreshCw size={32} className="text-amber-600" />
               </div>
             )}
           </div>
@@ -219,52 +343,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           </Button>
         </div>
 
-        {!voiceError ? (
-          <div className="h-8 mb-4 flex items-center">
-            {(userSpeaking || isMitraSpeaking || interimText || processingResponse) ? (
-              <div className="flex items-center justify-center space-x-1 h-8">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div 
-                    key={i}
-                    className="text-blue-600 w-1 rounded-full"
-                    style={{
-                      height: `${Math.random() * 24 + (userSpeaking || isMitraSpeaking || processingResponse ? 8 : 4)}px`,
-                      animationDelay: `${i * 0.05}s`,
-                      animation: 'pulse 0.6s infinite'
-                    }}
-                  ></div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center space-x-1 h-8">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div 
-                    key={i}
-                    className="bg-gray-300 w-1 rounded-full"
-                    style={{
-                      height: `${4 + (i % 3) * 2}px`
-                    }}
-                  ></div>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="h-8 mb-4 text-red-500 text-sm flex items-center">
-            <span>{voiceError}</span>
-            {userText && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="ml-2 text-xs text-blue-500 hover:text-blue-700 p-1 h-auto"
-                onClick={handleRetryResponse}
-                disabled={processingResponse}
-              >
-                Retry
-              </Button>
-            )}
-          </div>
-        )}
+        {renderEmotionalIndicator()}
 
         <div className="mb-8 min-h-32 text-center">
           {interimText && (
@@ -272,7 +351,9 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           )}
           
           {processingResponse && !interimText && (
-            <p className="text-md text-purple-500 italic">Mitra is thinking...</p>
+            <p className="text-md text-purple-500 italic">
+              {connectionStatus === 'reconnecting' ? 'Reconnecting to Mitra...' : 'Mitra is thinking...'}
+            </p>
           )}
           
           {userText && !interimText && !processingResponse && (
@@ -285,7 +366,9 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           {responseText && !interimText && !processingResponse && (
             <div className="mt-4">
               <h3 className="text-sm text-gray-400 mb-1">Mitra:</h3>
-              <p className={`text-lg ${isMitraSpeaking ? 'text-blue-600' : ''}`}>{responseText}</p>
+              <p className={`text-lg ${isMitraSpeaking ? 'text-blue-600' : ''} ${connectionStatus === 'error' ? 'text-amber-700' : ''}`}>
+                {responseText}
+              </p>
             </div>
           )}
           
@@ -305,7 +388,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
               className="hover:bg-opacity-80 text-white px-6 py-4 h-auto rounded-xl shadow-sm bg-blue-500"
               disabled={isMitraSpeaking || processingResponse}
             >
-              Speak to Mitra
+              <Mic size={18} className="mr-2" /> Speak to Mitra
             </Button>
           ) : (
             <Button 
@@ -315,6 +398,16 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
               disabled={processingResponse && !userSpeaking}
             >
               {processingResponse ? 'Processing...' : 'Stop Speaking'}
+            </Button>
+          )}
+          
+          {connectionStatus === 'error' && !processingResponse && userText && (
+            <Button 
+              onClick={handleRetryResponse}
+              variant="outline" 
+              className="border-amber-400 text-amber-700 hover:bg-amber-50 px-6 py-4 h-auto rounded-xl shadow-sm"
+            >
+              <RefreshCw size={18} className="mr-2" /> Reconnect
             </Button>
           )}
           
