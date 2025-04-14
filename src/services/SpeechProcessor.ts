@@ -24,12 +24,6 @@ export class SpeechProcessor {
     }
     
     this.speechSynthesis = window.speechSynthesis;
-    
-    // Initialize with stored OpenRouter key if available
-    const storedOpenRouterKey = localStorage.getItem('openRouterKey');
-    if (storedOpenRouterKey) {
-      this.openRouterKey = storedOpenRouterKey;
-    }
   }
   
   public setVoiceGender(gender: 'male' | 'female'): void {
@@ -44,8 +38,6 @@ export class SpeechProcessor {
   
   public setOpenRouterKey(key: string): void {
     this.openRouterKey = key;
-    // Save the OpenRouter key to localStorage for persistence
-    localStorage.setItem('openRouterKey', key);
     console.log('OpenRouter API key has been set');
   }
   
@@ -292,7 +284,7 @@ export class SpeechProcessor {
     // Check if we have an OpenRouter API key
     if (!this.openRouterKey) {
       console.error('OpenRouter API key is not set');
-      return "I'm having trouble connecting. It seems my API key is missing or invalid. Could you please check the settings?";
+      return "I'm having trouble connecting. It seems my API key is missing or invalid. Please try again later.";
     }
 
     try {
