@@ -1,8 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import MainContent from '@/components/MainContent';
+import EmotionalContent from '@/components/EmotionalContent';
 import SpeechProcessor from '@/services/SpeechProcessor';
+import { MoodProvider } from '@/contexts/MoodContext';
 
 // Generate a unique ID for tracking conversations
 const generateId = () => Math.random().toString(36).substring(2, 15);
@@ -125,27 +128,35 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-blue-50 to-white">
-      {/* Sidebar */}
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        toggleSidebar={toggleSidebar} 
-        selectedGender={selectedGender}
-        onGenderChange={handleGenderChange}
-      />
-      
-      {/* Main content */}
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <MainContent 
-            isSessionActive={isSessionActive}
-            startSession={startSession}
-            endSession={endSession}
-          />
-        </main>
+    <MoodProvider>
+      <div className="min-h-screen flex bg-gradient-to-br from-blue-50 to-white">
+        {/* Sidebar */}
+        <Sidebar 
+          isOpen={isSidebarOpen} 
+          toggleSidebar={toggleSidebar} 
+          selectedGender={selectedGender}
+          onGenderChange={handleGenderChange}
+        />
+        
+        {/* Main content */}
+        <div className="flex-1 flex flex-col">
+          <Header />
+          <main className="flex-1 flex flex-col">
+            <div className="flex items-center justify-center py-6">
+              <MainContent 
+                isSessionActive={isSessionActive}
+                startSession={startSession}
+                endSession={endSession}
+              />
+            </div>
+            
+            <div className="flex-1 pb-6 px-6">
+              <EmotionalContent />
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </MoodProvider>
   );
 };
 

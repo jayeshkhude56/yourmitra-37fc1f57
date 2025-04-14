@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import SpeechProcessor from '@/services/SpeechProcessor';
-import VoiceGenderSelector from '@/components/VoiceGenderSelector';
+import { useMood } from '@/contexts/MoodContext';
+import { Frown, Heart, Smile, Meh } from 'lucide-react';
 
 interface MainContentProps {
   isSessionActive: boolean;
@@ -17,12 +19,9 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
   const [responseText, setResponseText] = useState("");
   const [isMitraSpeaking, setIsMitraSpeaking] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
-  const [selectedGender, setSelectedGender] = useState<'male' | 'female'>(() => {
-    // Try to get saved gender from localStorage
-    const savedGender = localStorage.getItem('mitra-voice-gender');
-    return (savedGender === 'female' ? 'female' : 'male');
-  });
-
+  
+  const { currentMood, isEmpathyMode } = useMood();
+  
   useEffect(() => {
     console.log("Session active state changed:", isSessionActive);
     if (isSessionActive) {
@@ -40,13 +39,6 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
       setVoiceError(null);
     }
   }, [isSessionActive]);
-  
-  const handleGenderChange = (gender: 'male' | 'female') => {
-    setSelectedGender(gender);
-    SpeechProcessor.setVoiceGender(gender);
-    localStorage.setItem('mitra-voice-gender', gender);
-    console.log(`Voice gender set to: ${gender}`);
-  };
   
   const handleStartListening = () => {
     console.log("Starting to listen for user speech");
@@ -79,12 +71,27 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           
           console.log("Getting AI response for text:", text);
           try {
-            const response = await SpeechProcessor.getAIResponse(text);
+            let response;
+            
+            // Generate empathetic responses in empathy mode
+            if (isEmpathyMode) {
+              const empathyResponses = [
+                "I'm right here with you. It's okay to feel this way.",
+                "Sometimes we just need space to feel our emotions. I'm here.",
+                "It's okay to cry. I'm listening without judgment.",
+                "You're not alone in this moment. I'm here with you.",
+                "Take all the time you need. There's no rush to feel better."
+              ];
+              response = empathyResponses[Math.floor(Math.random() * empathyResponses.length)];
+            } else {
+              response = await SpeechProcessor.getAIResponse(text);
+            }
+            
             console.log("Received AI response:", response);
             
             setResponseText(response);
             
-            console.log(`Speaking AI response using ${selectedGender} voice`);
+            console.log("Speaking AI response");
             setIsMitraSpeaking(true);
             SpeechProcessor.speak(response, () => {
               console.log("AI finished speaking");
@@ -124,17 +131,80 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
     console.log("Session ended");
   };
 
+  // Get background color based on current mood
+  const getMoodBackground = () => {
+    switch (currentMood) {
+      case 'calm': return 'bg-blue-50';
+      case 'happy': return 'bg-orange-50';
+      case 'sad': return 'bg-gray-50';
+      case 'anxious': return 'bg-yellow-50';
+      case 'angry': return 'bg-red-50';
+      default: return 'bg-purple-50';
+    }
+  };
+  
+  // Get the mood icon based on current mood
+  const getMoodIcon = () => {
+    switch (currentMood) {
+      case 'calm':
+      case 'happy':
+        return <Smile className="h-10 w-10 absolute" />;
+      case 'sad':
+      case 'angry':
+        return <Frown className="h-10 w-10 absolute" />;
+      case 'anxious':
+      default:
+        return <Meh className="h-10 w-10 absolute" />;
+    }
+  };
+  
+  // Get the breathing circle color based on mood
+  const getMoodCircleColor = () => {
+    switch (currentMood) {
+      case 'calm': return 'bg-blue-200';
+      case 'happy': return 'bg-orange-200';
+      case 'sad': return 'bg-gray-200';
+      case 'anxious': return 'bg-yellow-200';
+      case 'angry': return 'bg-red-200';
+      default: return 'bg-purple-200';
+    }
+  };
+  
+  // Get the text color based on mood
+  const getMoodTextColor = () => {
+    switch (currentMood) {
+      case 'calm': return 'text-blue-700';
+      case 'happy': return 'text-orange-700';
+      case 'sad': return 'text-gray-700';
+      case 'anxious': return 'text-yellow-700';
+      case 'angry': return 'text-red-700';
+      default: return 'text-purple-700';
+    }
+  };
+  
+  // Show animated tears in empathy mode for sad mood
+  const showTears = isEmpathyMode && (currentMood === 'sad');
+
   return (
-    <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto p-6">
+    <div className={`flex flex-col items-center justify-center w-full max-w-3xl mx-auto p-6 rounded-lg transition-colors duration-500 ${getMoodBackground()}`}>
       <div className="flex flex-col items-center w-full">
-        {/* Remove the voice gender selector from this section */}
         <div 
           onClick={userSpeaking ? handleStopListening : handleStartListening}
-          className={`w-40 h-40 rounded-full flex items-center justify-center mb-6 cursor-pointer
+          className={`w-40 h-40 rounded-full flex items-center justify-center mb-6 cursor-pointer relative
             ${(userSpeaking || isMitraSpeaking) ? 'animate-pulse' : 'breathing-circle'} 
-            ${userSpeaking ? 'bg-mitra-sky-blue' : 'bg-mitra-sky-blue bg-opacity-70'}`}
+            ${getMoodCircleColor()}`}
         >
-          {/* Empty breathing circle with no text */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            {getMoodIcon()}
+            
+            {/* Animated tears for empathy mode */}
+            {showTears && (
+              <div className="absolute top-14 left-14">
+                <div className="tear-drop animate-fall-1"></div>
+                <div className="tear-drop animate-fall-2 delay-300"></div>
+              </div>
+            )}
+          </div>
         </div>
 
         {!voiceError ? (
@@ -144,7 +214,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
                 {Array.from({ length: 12 }).map((_, i) => (
                   <div 
                     key={i}
-                    className="bg-mitra-sky-blue w-1 rounded-full"
+                    className={`${getMoodTextColor()} w-1 rounded-full`}
                     style={{
                       height: `${Math.random() * 24 + (userSpeaking || isMitraSpeaking ? 8 : 4)}px`,
                       animationDelay: `${i * 0.05}s`,
@@ -186,7 +256,15 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           {responseText && !interimText && (
             <div className="mt-4">
               <h3 className="text-sm text-gray-400 mb-1">Assistant:</h3>
-              <p className={`text-lg ${isMitraSpeaking ? 'text-mitra-sky-blue' : ''}`}>{responseText}</p>
+              <p className={`text-lg ${isMitraSpeaking ? getMoodTextColor() : ''}`}>{responseText}</p>
+            </div>
+          )}
+          
+          {/* Show a special message in empathy mode when silent */}
+          {isEmpathyMode && !userSpeaking && !isMitraSpeaking && !interimText && !userText && (
+            <div className="mt-4 italic text-gray-600">
+              <p>I'm here with you in this moment. ❤️</p>
+              <p className="text-sm mt-2">Sometimes just being together is enough.</p>
             </div>
           )}
         </div>
@@ -195,7 +273,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
           {!userSpeaking ? (
             <Button 
               onClick={handleStartListening}
-              className="bg-mitra-sky-blue hover:bg-blue-500 text-white px-6 py-4 h-auto rounded-full"
+              className={`hover:bg-opacity-80 text-white px-6 py-4 h-auto rounded-full ${getMoodBackground()} ${getMoodTextColor()}`}
               disabled={isMitraSpeaking}
             >
               Speak to Assistant
@@ -204,7 +282,7 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             <Button 
               onClick={handleStopListening}
               variant="outline"
-              className="border-mitra-sky-blue text-mitra-sky-blue hover:bg-blue-50 px-6 py-4 h-auto rounded-full"
+              className={`border-blue-400 ${getMoodTextColor()} hover:bg-blue-50 px-6 py-4 h-auto rounded-full`}
             >
               Stop Speaking
             </Button>
@@ -218,6 +296,13 @@ const MainContent = ({ isSessionActive, startSession, endSession }: MainContentP
             End Session
           </Button>
         </div>
+        
+        {/* Add special Heart icon for empathy mode */}
+        {isEmpathyMode && (
+          <div className="mt-4">
+            <Heart className="h-5 w-5 text-red-400" fill="rgba(248, 113, 113, 0.5)" />
+          </div>
+        )}
       </div>
     </div>
   );
